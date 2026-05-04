@@ -893,12 +893,12 @@ Transcript: ${transcript.substring(0,2000)}` }]}],
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: `For each major topic from this history class, suggest 2 high-quality research sources (books, documentaries, articles, websites) for a high school student.
+            contents: [{ parts: [{ text: `For each major topic from this history class, suggest 3-4 high-quality research sources mixing books, documentaries, articles, and websites for a high school student. Include a real URL where possible (Wikipedia, publisher page, streaming site, official site).
 
 Return ONLY valid JSON, no markdown.
-Format: {"sources": [{"topic": "Topic Name", "title": "Source Title", "type": "Book/Documentary/Article/Website", "description": "1 sentence on why useful"}]}
+Format: {"sources": [{"topic": "Topic Name", "title": "Source Title", "type": "Book/Documentary/Article/Website", "description": "1 sentence on why useful", "url": "https://... or empty string"}]}
 
-Topics: ${analysisData.topics.slice(0,4).map(t=>t.name).join(', ')}` }]}],
+Generate at least 3 sources per topic. Topics: ${analysisData.topics.slice(0,5).map(t=>t.name).join(', ')}` }]}],
             generationConfig: { temperature: 0.4 }
           })
         }
