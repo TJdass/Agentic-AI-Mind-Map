@@ -1,789 +1,779 @@
-// this is the mindmap
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agentic History — Mind Map</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=Syne+Mono&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0a;
-    --surface: #131313;
-    --surface2: #1a1a1a;
-    --border: #222;
-    --border2: #2e2e2e;
-    --text: #e8e4dc;
-    --text-muted: #6b6760;
-    --text-dim: #333;
-    --accent: #c8a96e;
-    --accent-dim: #7a5f35;
-    --accent-glow: rgba(200,169,110,0.15);
-    --green: #4a7c59;
-    --green-bright: #6db88a;
-    --sidebar-w: 340px;
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0f;--surface:#16161a;--surface2:#1e1e24;--surface3:#26262e;
+  --border:#2a2a35;--border2:#38384a;
+  --text:#f0eee8;--text2:#9896a0;--text3:#555560;
+  --gold:#c9a84c;--gold2:#e8c76a;--gold-glow:rgba(201,168,76,0.12);--gold-dim:rgba(201,168,76,0.04);
+  --purple:#7b68ee;--purple2:#9d8fff;
+  --teal:#4ecdc4;--coral:#ff6b6b;--green:#6bcb77;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'Syne',sans-serif;color:var(--text);cursor:default}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+#header{
+  position:fixed;top:0;left:0;right:0;height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  background:rgba(13,13,15,0.88);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  z-index:1000;
+}
+.logo{font-size:15px;font-weight:700;letter-spacing:-0.3px;color:var(--gold2);display:flex;align-items:center;gap:10px}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:pdot 2s ease-in-out infinite}
+@keyframes pdot{0%,100%{box-shadow:0 0 8px var(--gold)}50%{box-shadow:0 0 16px var(--gold)}}
+.header-center{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.schip{padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .18s;letter-spacing:.3px}
+.schip:hover{border-color:var(--gold);color:var(--gold)}
+.schip.active{border-color:var(--gold);color:var(--gold);background:var(--gold-glow)}
+.hactions{display:flex;align-items:center;gap:8px}
+.btn-g{padding:6px 14px;background:transparent;border:1px solid var(--border2);border-radius:6px;font-family:'Syne',sans-serif;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .18s;letter-spacing:.3px}
+.btn-g:hover{border-color:var(--gold);color:var(--gold)}
+.btn-p{padding:6px 14px;background:var(--gold);border:none;border-radius:6px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:#0d0d0f;cursor:pointer;transition:all .18s;letter-spacing:.3px}
+.btn-p:hover{background:var(--gold2);transform:translateY(-1px)}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
+#canvas-wrap{position:fixed;top:52px;left:0;right:0;bottom:0}
+#canvas{width:100%;height:100%;cursor:grab;display:block}
+#canvas.panning{cursor:grabbing}
+#canvas.ndrag{cursor:move}
 
-  /* grain */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.35;
-  }
+#tip{position:fixed;padding:8px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;font-size:12px;font-weight:500;color:var(--text);pointer-events:none;z-index:800;opacity:0;transition:opacity .15s;max-width:240px;line-height:1.5;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+#tip.show{opacity:1}
 
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    z-index: 100;
-    background: var(--bg);
-  }
+#panel{
+  position:fixed;top:52px;right:0;width:320px;height:calc(100vh - 52px);
+  background:rgba(20,20,26,0.97);backdrop-filter:blur(24px);
+  border-left:1px solid var(--border);
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.16,1,.3,1);
+  z-index:500;display:flex;flex-direction:column;overflow:hidden;
+}
+#panel.open{transform:translateX(0)}
+#ph{padding:20px 20px 16px;border-bottom:1px solid var(--border);position:relative;flex-shrink:0}
+#pcls{position:absolute;top:16px;right:16px;width:28px;height:28px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;line-height:1}
+#pcls:hover{color:var(--text);border-color:var(--border2)}
+#ptag{font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+#ptitle{font-size:20px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:8px;letter-spacing:-.3px;padding-right:30px}
+#pmeta{display:flex;gap:6px;flex-wrap:wrap}
+.mchip{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:500;letter-spacing:.3px}
+.mchip.fh{background:rgba(201,168,76,.15);color:var(--gold2)}
+.mchip.fm{background:rgba(78,205,196,.12);color:var(--teal)}
+.mchip.fl{background:rgba(150,150,170,.1);color:var(--text2)}
+.mchip.fu{background:rgba(123,104,238,.15);color:var(--purple2)}
+.mchip.fc{background:var(--surface3);color:var(--text2)}
+#pbody{flex:1;overflow-y:auto;padding:0}
+#pbody::-webkit-scrollbar{width:3px}
+#pbody::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.psec{padding:14px 20px;border-bottom:1px solid var(--border)}
+.psec:last-child{border-bottom:none}
+.slbl{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.stext{font-size:13px;color:var(--text2);line-height:1.8}
+.citem{padding:9px 12px 9px 24px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:12px;color:var(--text2);line-height:1.6;cursor:default;position:relative}
+.citem::before{content:'';position:absolute;left:10px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold)}
+.srcrd{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;transition:border-color .15s}
+.srcrd:hover{border-color:var(--border2)}
+.stbdg{display:inline-block;padding:2px 7px;background:var(--surface3);border-radius:3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.stitle{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.sdesc{font-size:11px;color:var(--text2);line-height:1.6}
+.spgrid{display:flex;flex-wrap:wrap;gap:6px}
+.sppill{padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s}
+.sppill:hover{border-color:var(--purple);color:var(--purple2);background:rgba(123,104,238,.08)}
 
-  .logo {
-    font-family: 'Instrument Serif', serif;
-    font-size: 18px;
-    color: var(--accent);
-  }
-  .logo span { color: var(--text-muted); font-style: italic; font-size: 12px; margin-left: 8px; }
+#controls{position:fixed;bottom:24px;left:24px;display:flex;flex-direction:column;gap:4px;z-index:400}
+.cbtn{width:36px;height:36px;background:rgba(22,22,26,.92);backdrop-filter:blur(8px);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:16px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:'Syne Mono',monospace}
+.cbtn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
 
-  .header-right { display: flex; align-items: center; gap: 16px; }
+#stats{position:fixed;bottom:24px;right:24px;display:flex;gap:10px;z-index:400;font-size:10px;color:var(--text3);font-family:'Syne Mono',monospace;letter-spacing:.5px}
 
-  .session-pill {
-    padding: 5px 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 20px;
-    font-size: 11px;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .session-pill:hover { border-color: var(--accent-dim); color: var(--accent); }
-  .session-pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+#legend{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;background:rgba(22,22,26,.88);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:20px;padding:8px 18px;font-size:10px;color:var(--text3);z-index:400;letter-spacing:.3px;white-space:nowrap}
+.litem{display:flex;align-items:center;gap:5px}
+.ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
-  .open-recorder {
-    padding: 6px 14px;
-    background: var(--accent);
-    color: #0a0a0a;
-    border: none;
-    border-radius: 4px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: background 0.15s;
-  }
-  .open-recorder:hover { background: #d4b97e; }
-
-  .canvas-wrap {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-  }
-
-  canvas {
-    position: absolute;
-    inset: 0;
-    cursor: grab;
-  }
-  canvas:active { cursor: grabbing; }
-
-  /* Sidebar */
-  .sidebar {
-    position: absolute;
-    top: 0; right: 0;
-    width: var(--sidebar-w);
-    height: 100%;
-    background: var(--surface);
-    border-left: 1px solid var(--border2);
-    transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-    overflow-y: auto;
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-  }
-  .sidebar.open { transform: translateX(0); }
-
-  .sidebar-header {
-    padding: 20px 20px 14px;
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-    z-index: 2;
-  }
-
-  .sidebar-close {
-    position: absolute;
-    top: 16px; right: 16px;
-    background: none; border: none;
-    color: var(--text-muted); font-size: 18px;
-    cursor: pointer; line-height: 1;
-    transition: color 0.15s;
-  }
-  .sidebar-close:hover { color: var(--text); }
-
-  .sidebar-topic {
-    font-family: 'Instrument Serif', serif;
-    font-size: 22px;
-    color: var(--text);
-    margin-bottom: 4px;
-    padding-right: 28px;
-  }
-
-  .sidebar-freq {
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  .sidebar-body { padding: 16px 20px; flex: 1; }
-
-  .sb-section {
-    margin-bottom: 24px;
-  }
-
-  .sb-label {
-    font-size: 9px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .sb-summary {
-    font-size: 12px;
-    color: var(--text);
-    line-height: 1.8;
-  }
-
-  .sb-connections { list-style: none; }
-  .sb-connections li {
-    padding: 7px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.5;
-    cursor: pointer;
-    transition: color 0.15s;
-  }
-  .sb-connections li:hover { color: var(--accent); }
-  .sb-connections li:last-child { border-bottom: none; }
-  .sb-connections li::before { content: '→ '; color: var(--accent-dim); }
-
-  .source-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-  }
-  .source-type {
-    font-size: 9px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--accent-dim);
-    margin-bottom: 4px;
-  }
-  .source-title { font-size: 12px; color: var(--text); margin-bottom: 4px; font-weight: 500; }
-  .source-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
-
-  .sessions-panel {
-    padding: 16px 20px;
-    border-top: 1px solid var(--border);
-    margin-top: auto;
-  }
-  .sessions-title {
-    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--text-muted); margin-bottom: 10px;
-  }
-  .session-item {
-    padding: 7px 10px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    margin-bottom: 4px;
-    cursor: pointer;
-    font-size: 11px;
-    color: var(--text-muted);
-    transition: all 0.15s;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .session-item:hover { border-color: var(--accent-dim); color: var(--accent); }
-  .session-item.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
-  .session-date { font-size: 10px; opacity: 0.6; }
-
-  /* Empty state */
-  .empty-state {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    color: var(--text-muted);
-    text-align: center;
-    padding: 40px;
-  }
-  .empty-title {
-    font-family: 'Instrument Serif', serif;
-    font-size: 28px;
-    color: var(--text-dim);
-    margin-bottom: 4px;
-  }
-  .empty-hint { font-size: 12px; line-height: 1.8; color: var(--text-dim); }
-
-  /* zoom controls */
-  .zoom-controls {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    z-index: 10;
-  }
-  .zoom-btn {
-    width: 32px; height: 32px;
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    color: var(--text-muted);
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-  }
-  .zoom-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
-
-  .hint {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-    z-index: 10;
-  }
+#empty{position:fixed;top:52px;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:none}
+#empty.hidden{display:none}
+.etitle{font-size:32px;font-weight:700;color:var(--text3);letter-spacing:-1px}
+.esub{font-size:13px;color:var(--text3);line-height:1.8;text-align:center}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">Agentic History <span>mind map</span></div>
-  <div class="header-right">
-    <div id="session-pills" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-    <button class="open-recorder" onclick="window.open('history-ai.html')">+ New Session</button>
+<div id="header">
+  <div class="logo"><div class="logo-dot"></div>Agentic History</div>
+  <div class="header-center" id="schips"></div>
+  <div class="hactions">
+    <button class="btn-g" onclick="resetView()">Reset view</button>
+    <button class="btn-g" onclick="shuffle()">Shuffle</button>
+    <button class="btn-p" onclick="window.open('history-ai.html')">+ New session</button>
   </div>
-</header>
-
-<div class="canvas-wrap">
-  <canvas id="canvas"></canvas>
-
-  <div class="empty-state" id="empty-state">
-    <div class="empty-title">No sessions yet</div>
-    <div class="empty-hint">Run a class recording through the pipeline<br>and your mind map will appear here automatically.</div>
-    <button class="open-recorder" onclick="window.open('history-ai.html')" style="margin-top:8px">Open Recorder →</button>
-  </div>
-
-  <div class="zoom-controls">
-    <button class="zoom-btn" onclick="zoom(1.2)">+</button>
-    <button class="zoom-btn" onclick="zoom(0.8)">−</button>
-    <button class="zoom-btn" onclick="resetView()" style="font-size:11px">⊙</button>
-  </div>
-
-  <div class="hint">drag to pan · scroll to zoom · click a node</div>
 </div>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-  <div class="sidebar-header">
-    <button class="sidebar-close" onclick="closeSidebar()">×</button>
-    <div class="sidebar-topic" id="sb-topic">Topic</div>
-    <div class="sidebar-freq" id="sb-freq"></div>
+<div id="canvas-wrap"><canvas id="canvas"></canvas></div>
+<div id="tip"></div>
+
+<div id="panel">
+  <div id="ph">
+    <button id="pcls" onclick="closePanel()">×</button>
+    <div id="ptag">Topic</div>
+    <div id="ptitle">—</div>
+    <div id="pmeta"></div>
   </div>
-  <div class="sidebar-body">
-    <div class="sb-section">
-      <div class="sb-label">Summary</div>
-      <div class="sb-summary" id="sb-summary"></div>
-    </div>
-    <div class="sb-section" id="sb-connections-section">
-      <div class="sb-label">Connections</div>
-      <ul class="sb-connections" id="sb-connections"></ul>
-    </div>
-    <div class="sb-section" id="sb-sources-section">
-      <div class="sb-label">Sources & Research</div>
-      <div id="sb-sources"></div>
-    </div>
-  </div>
-  <div class="sessions-panel">
-    <div class="sessions-title">Sessions</div>
-    <div id="sessions-list"></div>
-  </div>
+  <div id="pbody"></div>
+</div>
+
+<div id="controls">
+  <button class="cbtn" onclick="zoomBy(1.18)">+</button>
+  <button class="cbtn" onclick="zoomBy(0.85)">−</button>
+  <button class="cbtn" onclick="resetView()" style="font-size:12px">⊙</button>
+</div>
+
+<div id="stats"><span id="sn">0 nodes</span><span>·</span><span id="se">0 edges</span></div>
+
+<div id="legend">
+  <div class="litem"><div class="ldot" style="background:var(--gold)"></div>Umbrella</div>
+  <div class="litem"><div class="ldot" style="background:var(--purple)"></div>Topic</div>
+  <div class="litem"><div class="ldot" style="background:var(--teal)"></div>Connection</div>
+  <div class="litem" style="color:var(--text3)">· Drag nodes · Scroll to zoom · Click to explore</div>
+</div>
+
+<div id="empty">
+  <div class="etitle">No sessions yet</div>
+  <div class="esub">Run a recording through the pipeline<br>and your map will appear here automatically.</div>
 </div>
 
 <script>
-// ─── Data ────────────────────────────────────────────────────────────────────
-let sessions = [];
-let activeSessionIdx = 0;
-let nodes = [];
-let edges = [];
-let selectedNode = null;
-
-// ─── Canvas state ────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-let W, H;
-let offsetX = 0, offsetY = 0;
-let scale = 1;
-let dragging = false;
-let dragStart = { x: 0, y: 0 };
-let hoveredNode = null;
+let W=0, H=0;
+let camX=0, camY=0, camZ=1;
+let nodes=[], edges=[];
+let sessions=[], activeIdx=0;
+let clickCounts={};
+let hoveredNode=null, selectedNode=null, draggingNode=null;
+let panning=false, panStart={x:0,y:0};
+let dragOff={x:0,y:0};
+let mdNode=null, mdPos={x:0,y:0}, mdTime=0, didDrag=false;
+let simSteps=0;
 
-// ─── Load data ───────────────────────────────────────────────────────────────
-function loadSessions() {
-  const raw = localStorage.getItem('agenticHistorySessions');
-  if (raw) {
-    try { sessions = JSON.parse(raw); } catch(e) { sessions = []; }
-  }
+const PALETTE = {
+  center:   {fill:'#181410', stroke:'#c9a84c', text:'#e8c76a', glow:'rgba(201,168,76,.22)'},
+  umbrella: {fill:'#14121e', stroke:'#7b68ee', text:'#9d8fff', glow:'rgba(123,104,238,.18)'},
+  high:     {fill:'#161410', stroke:'#c9a84c', text:'#d4b86a', glow:'rgba(201,168,76,.14)'},
+  medium:   {fill:'#111618', stroke:'#4ecdc4', text:'#6bd8d0', glow:'rgba(78,205,196,.12)'},
+  low:      {fill:'#131316', stroke:'#666080', text:'#9896a0', glow:'rgba(130,130,160,.08)'},
+};
 
-  // DEMO DATA if empty — remove once real sessions exist
-  if (sessions.length === 0) {
-    sessions = [
-      {
-        date: new Date().toISOString().split('T')[0],
-        className: 'AP History',
-        topics: [
-          { name: 'US-China Relations', frequency: 'high', summary: 'Discussion of tariffs and trade war escalation between the US and China, and implications for global supply chains.' },
-          { name: 'AI Regulation', frequency: 'high', summary: 'Debate over how governments should regulate artificial intelligence, referencing EU AI Act and US executive orders.' },
-          { name: 'Climate Policy', frequency: 'medium', summary: 'Paris Agreement commitments and whether nations are on track to meet 2030 targets.' },
-          { name: 'NATO Expansion', frequency: 'medium', summary: 'Discussion of recent NATO membership changes and implications for European security.' },
-          { name: 'Middle East Conflict', frequency: 'low', summary: 'Ongoing humanitarian situation and ceasefire negotiations.' },
-          { name: 'Global Inflation', frequency: 'low', summary: 'Central bank responses to inflation across major economies.' },
-        ],
-        connections: [
-          'US-China Relations connects to Global Inflation because tariffs directly increase consumer prices worldwide.',
-          'AI Regulation connects to US-China Relations because AI dominance is a key axis of geopolitical competition.',
-          'Climate Policy connects to US-China Relations because both nations are the largest carbon emitters and must cooperate.',
-          'NATO Expansion connects to Middle East Conflict because shifting US attention affects Middle East security commitments.',
-        ],
-        sources: [
-          { topic: 'US-China Relations', title: 'The Hundred-Year Marathon', type: 'Book', description: 'Michael Pillsbury\'s analysis of China\'s long-term strategic goals.' },
-          { topic: 'AI Regulation', title: 'The Alignment Problem', type: 'Book', description: 'Brian Christian on how AI systems learn and why alignment matters for policy.' },
-          { topic: 'Climate Policy', title: 'IPCC Sixth Assessment Report', type: 'Website', description: 'The definitive scientific consensus on climate change and mitigation pathways.' },
-          { topic: 'NATO Expansion', title: 'NATO official website', type: 'Website', description: 'Primary source for understanding membership criteria and current members.' },
-        ]
-      }
-    ];
-  }
+// ══════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════
+window.addEventListener('load', ()=>{
+  resize();
+  window.addEventListener('resize', resize);
+  bindEvents();
+  loadPersist();
+  loadSessions();
+  requestAnimationFrame(loop);
+});
 
-  buildSessionPills();
-  buildSessionsList();
-  loadSession(0);
-}
-
-function buildSessionPills() {
-  const el = document.getElementById('session-pills');
-  el.innerHTML = '';
-  sessions.forEach((s, i) => {
-    const pill = document.createElement('div');
-    pill.className = 'session-pill' + (i === activeSessionIdx ? ' active' : '');
-    pill.textContent = s.date;
-    pill.onclick = () => loadSession(i);
-    el.appendChild(pill);
-  });
-}
-
-function buildSessionsList() {
-  const el = document.getElementById('sessions-list');
-  el.innerHTML = '';
-  sessions.forEach((s, i) => {
-    const item = document.createElement('div');
-    item.className = 'session-item' + (i === activeSessionIdx ? ' active' : '');
-    item.innerHTML = `<span>${s.className}</span><span class="session-date">${s.date}</span>`;
-    item.onclick = () => { loadSession(i); };
-    el.appendChild(item);
-  });
-}
-
-function loadSession(idx) {
-  activeSessionIdx = idx;
-  const session = sessions[idx];
-  document.getElementById('empty-state').style.display = session ? 'none' : 'flex';
-  if (!session) return;
-
-  buildGraph(session);
-  buildSessionPills();
-  buildSessionsList();
-  closeSidebar();
-  resetView();
-  draw();
-}
-
-// ─── Graph layout ────────────────────────────────────────────────────────────
-function buildGraph(session) {
-  nodes = [];
-  edges = [];
-
-  // Centre node
-  nodes.push({
-    id: 'center',
-    label: session.className,
-    x: 0, y: 0,
-    r: 52,
-    type: 'center',
-    topic: null
-  });
-
-  const topics = session.topics || [];
-  const count = topics.length;
-
-  // Arrange topics in a circle, sized by frequency
-  topics.forEach((t, i) => {
-    const angle = (2 * Math.PI * i / count) - Math.PI / 2;
-    const dist = 220;
-    const r = t.frequency === 'high' ? 38 : t.frequency === 'medium' ? 30 : 22;
-    const x = Math.cos(angle) * dist;
-    const y = Math.sin(angle) * dist;
-    nodes.push({ id: t.name, label: t.name, x, y, r, type: 'topic', topic: t });
-    edges.push({ from: 'center', to: t.name, strength: 0.4 });
-  });
-
-  // Connection edges between topics
-  const conns = session.connections || [];
-  conns.forEach(c => {
-    const topicNames = topics.map(t => t.name);
-    let found = [];
-    topicNames.forEach(name => { if (c.includes(name)) found.push(name); });
-    if (found.length >= 2) {
-      edges.push({ from: found[0], to: found[1], strength: 0.8, label: '', connection: c });
-    }
-  });
-}
-
-// ─── Drawing ─────────────────────────────────────────────────────────────────
-function resize() {
-  W = canvas.width = canvas.offsetWidth;
+function resize(){
+  W = canvas.width  = canvas.offsetWidth;
   H = canvas.height = canvas.offsetHeight;
-  draw();
 }
 
-function worldToScreen(x, y) {
-  return { x: x * scale + W/2 + offsetX, y: y * scale + H/2 + offsetY };
+function loadPersist(){
+  try{ clickCounts = JSON.parse(localStorage.getItem('ahClicks')||'{}'); }catch(e){}
+}
+function savePersist(){ localStorage.setItem('ahClicks', JSON.stringify(clickCounts)); }
+
+// ══════════════════════════════════════════
+// SESSIONS
+// ══════════════════════════════════════════
+function loadSessions(){
+  try{
+    const r = localStorage.getItem('agenticHistorySessions');
+    if(r) sessions = JSON.parse(r);
+  }catch(e){}
+  if(!sessions.length) sessions = demoData();
+  buildChips();
+  activateSession(0);
+  setInterval(pollSessions, 3000);
 }
 
-function screenToWorld(x, y) {
-  return { x: (x - W/2 - offsetX) / scale, y: (y - H/2 - offsetY) / scale };
+function pollSessions(){
+  try{
+    const r = localStorage.getItem('agenticHistorySessions');
+    if(!r) return;
+    const f = JSON.parse(r);
+    if(f.length !== sessions.length){ sessions=f; buildChips(); activateSession(activeIdx<f.length?activeIdx:0); }
+  }catch(e){}
 }
 
-function draw() {
-  ctx.clearRect(0, 0, W, H);
+function buildChips(){
+  const el = document.getElementById('schips');
+  el.innerHTML='';
+  sessions.forEach((s,i)=>{
+    const c=document.createElement('div');
+    c.className='schip'+(i===activeIdx?' active':'');
+    c.textContent=s.date+' · '+s.className;
+    c.onclick=()=>activateSession(i);
+    el.appendChild(c);
+  });
+}
 
-  if (nodes.length === 0) return;
+function activateSession(i){
+  activeIdx=i;
+  buildChips();
+  closePanel();
+  buildGraph(sessions[i]);
+  simSteps=200;
+  document.getElementById('empty').classList.toggle('hidden', nodes.length>0);
+}
 
-  // Draw edges
-  edges.forEach(e => {
-    const fromNode = nodes.find(n => n.id === e.from);
-    const toNode   = nodes.find(n => n.id === e.to);
-    if (!fromNode || !toNode) return;
+// ══════════════════════════════════════════
+// GRAPH BUILDING
+// ══════════════════════════════════════════
+function buildGraph(session){
+  nodes=[]; edges=[];
+  const topics = session.topics||[];
+  const conns  = session.connections||[];
+  const srcs   = session.sources||[];
 
-    const fs = worldToScreen(fromNode.x, fromNode.y);
-    const ts = worldToScreen(toNode.x, toNode.y);
+  // Center
+  addNode('__center__', session.className, 0, 0, 56, 'center', null, null);
 
-    const isConnection = e.connection;
-    ctx.beginPath();
-    ctx.moveTo(fs.x, fs.y);
-    ctx.lineTo(ts.x, ts.y);
-    ctx.strokeStyle = isConnection ? 'rgba(200,169,110,0.25)' : 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = isConnection ? 1.5 : 0.5;
-    if (isConnection) ctx.setLineDash([4, 6]);
-    ctx.stroke();
-    ctx.setLineDash([]);
+  // Auto-cluster connected topics under umbrella nodes
+  const clusters = cluster(topics, conns);
+
+  clusters.forEach((cl, ci)=>{
+    const angle = (2*Math.PI*ci/clusters.length) - Math.PI/2;
+    if(cl.topics.length === 1){
+      const t = cl.topics[0];
+      const d = 240 + (Math.random()-0.5)*40;
+      const n = addNode(t.name, t.name, Math.cos(angle)*d, Math.sin(angle)*d, baseR(t.frequency), 'topic', t.frequency, t);
+      n.sources = srcs.filter(s=>s.topic===t.name);
+      n.conns   = conns.filter(c=>c.toLowerCase().includes(t.name.toLowerCase()));
+      edges.push({from:'__center__', to:t.name, kind:'spoke'});
+    } else {
+      const ud = 195 + (Math.random()-0.5)*20;
+      const ub = addNode('__umb_'+ci, cl.label, Math.cos(angle)*ud, Math.sin(angle)*ud, 44, 'umbrella', null, null);
+      ub.children = cl.topics.map(t=>t.name);
+      ub.collapsed = false;
+      edges.push({from:'__center__', to:ub.id, kind:'spoke'});
+      cl.topics.forEach((t,ti)=>{
+        const sub = angle + (ti-(cl.topics.length-1)/2)*0.52;
+        const sd  = ud + 155 + (Math.random()-0.5)*30;
+        const n   = addNode(t.name, t.name, Math.cos(sub)*sd, Math.sin(sub)*sd, baseR(t.frequency), 'topic', t.frequency, t);
+        n.parentId = ub.id;
+        n.sources  = srcs.filter(s=>s.topic===t.name);
+        n.conns    = conns.filter(c=>c.toLowerCase().includes(t.name.toLowerCase()));
+        edges.push({from:ub.id, to:t.name, kind:'child'});
+      });
+    }
   });
 
-  // Draw nodes
-  nodes.forEach(n => {
-    const s = worldToScreen(n.x, n.y);
-    const r = n.r * scale;
-    const isHovered = hoveredNode && hoveredNode.id === n.id;
-    const isSelected = selectedNode && selectedNode.id === n.id;
-
-    // Glow for selected/hovered
-    if (isSelected || isHovered) {
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, r + 10, 0, Math.PI * 2);
-      const grd = ctx.createRadialGradient(s.x, s.y, r, s.x, s.y, r + 14);
-      grd.addColorStop(0, 'rgba(200,169,110,0.18)');
-      grd.addColorStop(1, 'rgba(200,169,110,0)');
-      ctx.fillStyle = grd;
-      ctx.fill();
+  // Cross-connection edges
+  conns.forEach(c=>{
+    const matched = topics.filter(t=>c.toLowerCase().includes(t.name.toLowerCase())).map(t=>t.name);
+    if(matched.length>=2){
+      const [a,b]=[matched[0],matched[1]];
+      if(!edges.find(e=>(e.from===a&&e.to===b)||(e.from===b&&e.to===a)))
+        edges.push({from:a, to:b, kind:'conn', label:c});
     }
+  });
 
-    // Node circle
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+  applyClickSizes();
+  document.getElementById('sn').textContent = nodes.length+' nodes';
+  document.getElementById('se').textContent = edges.length+' edges';
+}
 
-    if (n.type === 'center') {
-      ctx.fillStyle = '#1a1510';
-      ctx.fill();
-      ctx.strokeStyle = isSelected ? '#c8a96e' : '#6a5030';
-      ctx.lineWidth = isSelected ? 2 : 1;
-      ctx.stroke();
+function addNode(id,label,x,y,r,type,freq,data){
+  const n={id,label,x,y,vx:0,vy:0,r,baseR:r,type,freq,data,
+    clicks:clickCounts[id]||0,collapsed:false,children:[],
+    parentId:null,sources:[],conns:[],opacity:1};
+  nodes.push(n); return n;
+}
+
+function baseR(freq){ return freq==='high'?40:freq==='medium'?30:22; }
+
+function cluster(topics, conns){
+  const adj={};
+  topics.forEach(t=>{ adj[t.name]=new Set(); });
+  conns.forEach(c=>{
+    const m=topics.filter(t=>c.toLowerCase().includes(t.name.toLowerCase())).map(t=>t.name);
+    if(m.length>=2){ adj[m[0]].add(m[1]); adj[m[1]].add(m[0]); }
+  });
+  const visited=new Set(), clusters=[];
+  topics.forEach(t=>{
+    if(visited.has(t.name)) return;
+    const neighbors=[...adj[t.name]].filter(n=>!visited.has(n)).map(n=>topics.find(x=>x.name===n)).filter(Boolean);
+    if(neighbors.length>=1){
+      const group=[t,...neighbors].slice(0,4);
+      group.forEach(g=>visited.add(g.name));
+      clusters.push({label:umbLabel(group.map(g=>g.name)), topics:group});
     } else {
-      const freq = n.topic.frequency;
-      const fills = { high: '#1a1510', medium: '#111410', low: '#0f0f12' };
-      const strokes = { high: '#7a5f35', medium: '#4a5030', low: '#303040' };
-      ctx.fillStyle = fills[freq] || '#111';
-      ctx.fill();
-      ctx.strokeStyle = isSelected ? '#c8a96e' : (strokes[freq] || '#333');
-      ctx.lineWidth = isSelected ? 2 : 0.8;
-      ctx.stroke();
+      visited.add(t.name);
+      clusters.push({label:t.name, topics:[t]});
     }
+  });
+  return clusters;
+}
 
-    // Label
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+function umbLabel(names){
+  const geo=['China','Russia','NATO','Ukraine','Taiwan','War','Conflict','Trade','AI','Climate'];
+  for(const w of geo) if(names.some(n=>n.includes(w))) return w+' & Geopolitics';
+  return names.sort((a,b)=>a.length-b.length)[0];
+}
 
-    if (n.type === 'center') {
-      ctx.font = `italic ${Math.max(10, 13 * scale)}px 'Instrument Serif', serif`;
-      ctx.fillStyle = '#c8a96e';
-      ctx.fillText(n.label, s.x, s.y);
-    } else {
-      const fontSize = Math.max(8, 10 * scale);
-      ctx.font = `${fontSize}px 'DM Mono', monospace`;
-      ctx.fillStyle = isSelected || isHovered ? '#e8e4dc' : '#8a8680';
+function applyClickSizes(){
+  nodes.forEach(n=>{
+    n.clicks = clickCounts[n.id]||0;
+    if(n.type==='topic') n.r = n.baseR + Math.min(n.clicks*3, 26);
+  });
+}
 
-      // Word wrap for longer labels
-      const words = n.label.split(' ');
-      if (words.length === 1 || r > 30) {
-        if (words.length <= 2) {
-          ctx.fillText(n.label, s.x, s.y);
-        } else {
-          const mid = Math.ceil(words.length / 2);
-          ctx.fillText(words.slice(0, mid).join(' '), s.x, s.y - fontSize * 0.7);
-          ctx.fillText(words.slice(mid).join(' '), s.x, s.y + fontSize * 0.7);
-        }
-      } else {
-        ctx.fillText(words[0], s.x, s.y - fontSize * 0.6);
-        ctx.fillText(words.slice(1).join(' '), s.x, s.y + fontSize * 0.6);
+// ══════════════════════════════════════════
+// SIMULATION
+// ══════════════════════════════════════════
+function simTick(){
+  if(simSteps<=0) return;
+  simSteps--;
+  const alpha = Math.max(0.02, simSteps/200);
+
+  // Repulsion
+  for(let i=0;i<nodes.length;i++){
+    const a=nodes[i]; if(hidden(a)) continue;
+    for(let j=i+1;j<nodes.length;j++){
+      const b=nodes[j]; if(hidden(b)) continue;
+      const dx=b.x-a.x, dy=b.y-a.y;
+      const d=Math.sqrt(dx*dx+dy*dy)||1;
+      const min=a.r+b.r+70;
+      if(d<min){
+        const f=(min-d)/d*0.6;
+        a.vx-=dx*f; a.vy-=dy*f;
+        b.vx+=dx*f; b.vy+=dy*f;
       }
     }
+  }
+
+  // Springs
+  edges.forEach(e=>{
+    const a=nodes.find(n=>n.id===e.from), b=nodes.find(n=>n.id===e.to);
+    if(!a||!b||hidden(a)||hidden(b)) return;
+    const td=e.kind==='spoke'?230:e.kind==='child'?165:320;
+    const dx=b.x-a.x, dy=b.y-a.y;
+    const d=Math.sqrt(dx*dx+dy*dy)||1;
+    const f=(d-td)/d*0.07;
+    a.vx+=dx*f; a.vy+=dy*f;
+    b.vx-=dx*f; b.vy-=dy*f;
+  });
+
+  // Center gravity + integrate
+  nodes.forEach(n=>{
+    if(hidden(n)||n.type==='center'||n===draggingNode) { n.vx=0; n.vy=0; return; }
+    n.vx -= n.x*0.008*alpha;
+    n.vy -= n.y*0.008*alpha;
+    n.x+=n.vx; n.y+=n.vy;
+    n.vx*=0.80; n.vy*=0.80;
   });
 }
 
-// ─── Interaction ─────────────────────────────────────────────────────────────
-function getNodeAt(sx, sy) {
-  for (let i = nodes.length - 1; i >= 0; i--) {
-    const n = nodes[i];
-    const s = worldToScreen(n.x, n.y);
-    const dist = Math.hypot(sx - s.x, sy - s.y);
-    if (dist < n.r * scale + 8) return n;
+function hidden(n){ if(!n.parentId) return false; const p=nodes.find(x=>x.id===n.parentId); return p&&p.collapsed; }
+
+// ══════════════════════════════════════════
+// RENDER LOOP
+// ══════════════════════════════════════════
+function loop(){ simTick(); draw(); requestAnimationFrame(loop); }
+
+function w2s(x,y){ return {x: x*camZ+W/2+camX, y: y*camZ+H/2+camY}; }
+function s2w(x,y){ return {x: (x-W/2-camX)/camZ, y: (y-H/2-camY)/camZ}; }
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawGrid();
+
+  // Edges first
+  edges.forEach(e=>{
+    const a=nodes.find(n=>n.id===e.from), b=nodes.find(n=>n.id===e.to);
+    if(!a||!b||hidden(a)||hidden(b)) return;
+    drawEdge(a,b,e);
+  });
+
+  // Nodes back→front
+  [...nodes].filter(n=>!hidden(n)).sort((a,b)=>a.r-b.r).forEach(n=>drawNode(n));
+}
+
+function drawGrid(){
+  const g=60*camZ;
+  const ox=((camX+W/2)%g+g)%g, oy=((camY+H/2)%g+g)%g;
+  ctx.strokeStyle='rgba(255,255,255,0.022)'; ctx.lineWidth=0.5;
+  ctx.beginPath();
+  for(let x=ox-g;x<W+g;x+=g){ctx.moveTo(x,0);ctx.lineTo(x,H)}
+  for(let y=oy-g;y<H+g;y+=g){ctx.moveTo(0,y);ctx.lineTo(W,y)}
+  ctx.stroke();
+}
+
+function drawEdge(a,b,e){
+  const as=w2s(a.x,a.y), bs=w2s(b.x,b.y);
+  ctx.beginPath();
+  if(e.kind==='conn'){
+    const mx=(as.x+bs.x)/2, my=(as.y+bs.y)/2;
+    const px=-(bs.y-as.y)*0.14, py=(bs.x-as.x)*0.14;
+    ctx.moveTo(as.x,as.y);
+    ctx.quadraticCurveTo(mx+px,my+py,bs.x,bs.y);
+    ctx.strokeStyle='rgba(78,205,196,0.2)'; ctx.lineWidth=1;
+    ctx.setLineDash([4,7]);
+  } else if(e.kind==='child'){
+    ctx.moveTo(as.x,as.y); ctx.lineTo(bs.x,bs.y);
+    ctx.strokeStyle='rgba(123,104,238,0.22)'; ctx.lineWidth=0.8;
+    ctx.setLineDash([]);
+  } else {
+    ctx.moveTo(as.x,as.y); ctx.lineTo(bs.x,bs.y);
+    ctx.strokeStyle='rgba(201,168,76,0.1)'; ctx.lineWidth=0.6;
+    ctx.setLineDash([]);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawNode(n){
+  const s=w2s(n.x,n.y), r=n.r*camZ;
+  if(r<2) return;
+  const isH=hoveredNode&&hoveredNode.id===n.id;
+  const isS=selectedNode&&selectedNode.id===n.id;
+  const col=PALETTE[n.type==='topic'?(n.freq||'low'):n.type]||PALETTE.low;
+
+  // Glow
+  if(isH||isS){
+    const g=ctx.createRadialGradient(s.x,s.y,r*.7,s.x,s.y,r*2.4);
+    g.addColorStop(0,col.glow); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(s.x,s.y,r*2.4,0,Math.PI*2);
+    ctx.fillStyle=g; ctx.fill();
+  }
+
+  // Umbrella pulse ring
+  if(n.type==='umbrella'){
+    const p=0.65+0.35*Math.sin(Date.now()*.0018);
+    ctx.beginPath(); ctx.arc(s.x,s.y,r+7*camZ*p,0,Math.PI*2);
+    ctx.strokeStyle='rgba(123,104,238,0.13)'; ctx.lineWidth=1.2; ctx.stroke();
+  }
+
+  // Main fill
+  ctx.beginPath(); ctx.arc(s.x,s.y,r,0,Math.PI*2);
+  ctx.fillStyle=col.fill; ctx.fill();
+  ctx.strokeStyle=isS?col.text:col.stroke;
+  ctx.lineWidth=isS?2:0.9; ctx.stroke();
+
+  // Collapsed dash
+  if(n.collapsed&&n.children.length>0){
+    ctx.beginPath(); ctx.arc(s.x,s.y,r+3,0,Math.PI*2);
+    ctx.strokeStyle=col.stroke; ctx.lineWidth=2; ctx.setLineDash([3,5]); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // Label
+  if(r>7){
+    const fs=Math.max(8,Math.min(13,r*.36));
+    const w=n.type==='center'?'700':n.type==='umbrella'?'600':'500';
+    ctx.font=`${w} ${fs}px 'Syne',sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle=(isH||isS)?'#f0eee8':col.text;
+    const lines=wrap(n.label, Math.floor(r*1.6/(fs*.55)));
+    const lh=fs*1.25, sy=s.y-(lines.length-1)*lh/2;
+    lines.forEach((l,i)=>ctx.fillText(l, s.x, sy+i*lh));
+
+    // Click badge
+    if(n.clicks>0&&r>16){
+      const bx=s.x+r*.68, by=s.y-r*.68;
+      ctx.beginPath(); ctx.arc(bx,by,8,0,Math.PI*2);
+      ctx.fillStyle=col.stroke; ctx.fill();
+      ctx.font=`600 8px 'Syne',sans-serif`;
+      ctx.fillStyle='#0d0d0f'; ctx.fillText(n.clicks,bx,by);
+    }
+
+    // Collapse chevron
+    if(n.type==='umbrella'&&r>12){
+      ctx.font=`10px sans-serif`; ctx.fillStyle=col.text;
+      ctx.fillText(n.collapsed?'▸':'▾', s.x, s.y+r-9);
+    }
+  }
+}
+
+function wrap(text, max){
+  const words=text.split(' '), lines=[];
+  let cur='';
+  words.forEach(w=>{
+    const t=(cur?cur+' ':'')+w;
+    if(t.length>max&&cur){ lines.push(cur); cur=w; }
+    else cur=t;
+  });
+  if(cur) lines.push(cur);
+  return lines.length?lines:[''];
+}
+
+// ══════════════════════════════════════════
+// INPUT
+// ══════════════════════════════════════════
+function bindEvents(){
+  canvas.addEventListener('mousedown',onDown);
+  canvas.addEventListener('mousemove',onMove);
+  canvas.addEventListener('mouseup',onUp);
+  canvas.addEventListener('mouseleave',onUp);
+  canvas.addEventListener('wheel',onWheel,{passive:false});
+  canvas.addEventListener('dblclick',onDbl);
+  canvas.addEventListener('touchstart',onTS,{passive:false});
+  canvas.addEventListener('touchmove',onTM,{passive:false});
+  canvas.addEventListener('touchend',onTE);
+}
+
+function nodeAt(mx,my){
+  const w=s2w(mx,my);
+  for(let i=nodes.length-1;i>=0;i--){
+    const n=nodes[i]; if(hidden(n)) continue;
+    const dx=w.x-n.x,dy=w.y-n.y;
+    if(dx*dx+dy*dy<(n.r+8)*(n.r+8)) return n;
   }
   return null;
 }
 
-canvas.addEventListener('mousedown', e => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  const hit = getNodeAt(mx, my);
-  if (hit) {
-    if (hit.type !== 'center') openSidebar(hit);
+function onDown(e){
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
+  const hit=nodeAt(mx,my);
+  mdTime=Date.now(); mdPos={x:mx,y:my}; mdNode=hit; didDrag=false;
+  if(hit){
+    const w=s2w(mx,my); dragOff={x:w.x-hit.x,y:w.y-hit.y};
   } else {
-    dragging = true;
-    dragStart = { x: e.clientX - offsetX, y: e.clientY - offsetY };
+    panning=true; panStart={x:e.clientX-camX,y:e.clientY-camY};
+    canvas.classList.add('panning');
   }
-});
+}
 
-canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+function onMove(e){
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
 
-  if (dragging) {
-    offsetX = e.clientX - dragStart.x;
-    offsetY = e.clientY - dragStart.y;
-    draw();
-    return;
+  if(mdNode&&!draggingNode){
+    const dx=mx-mdPos.x,dy=my-mdPos.y;
+    if(dx*dx+dy*dy>18){ draggingNode=mdNode; didDrag=true; canvas.classList.add('ndrag'); }
   }
-
-  const hit = getNodeAt(mx, my);
-  if (hit !== hoveredNode) {
-    hoveredNode = hit;
-    canvas.style.cursor = hit ? 'pointer' : 'grab';
-    draw();
+  if(draggingNode){
+    const w=s2w(mx,my); draggingNode.x=w.x-dragOff.x; draggingNode.y=w.y-dragOff.y;
+    draggingNode.vx=0; draggingNode.vy=0; return;
   }
-});
+  if(panning){ camX=e.clientX-panStart.x; camY=e.clientY-panStart.y; return; }
 
-canvas.addEventListener('mouseup', () => { dragging = false; });
-canvas.addEventListener('mouseleave', () => { dragging = false; });
+  const hit=nodeAt(mx,my);
+  if(hit!==hoveredNode){
+    hoveredNode=hit;
+    canvas.style.cursor=hit?'pointer':'grab';
+    if(hit) showTip(hit,e.clientX,e.clientY); else hideTip();
+  } else if(hit){ moveTip(e.clientX,e.clientY); }
+}
 
-canvas.addEventListener('wheel', e => {
+function onUp(){
+  canvas.classList.remove('panning','ndrag');
+  if(draggingNode){ draggingNode=null; mdNode=null; return; }
+  if(mdNode&&!didDrag&&Date.now()-mdTime<400) clickNode(mdNode);
+  mdNode=null; panning=false;
+}
+
+function onDbl(e){
+  const r=canvas.getBoundingClientRect();
+  const hit=nodeAt(e.clientX-r.left,e.clientY-r.top);
+  if(hit&&hit.type==='umbrella') toggleCollapse(hit);
+}
+
+function onWheel(e){
   e.preventDefault();
-  const factor = e.deltaY > 0 ? 0.92 : 1.08;
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left, my=e.clientY-r.top;
+  const f=e.deltaY<0?1.1:0.91;
+  const wx=(mx-W/2-camX)/camZ, wy=(my-H/2-camY)/camZ;
+  camZ=Math.max(0.15,Math.min(5,camZ*f));
+  camX=mx-W/2-wx*camZ; camY=my-H/2-wy*camZ;
+}
 
-  // Zoom towards cursor
-  offsetX = mx - (mx - offsetX) * factor - W/2 * (factor - 1);
-  offsetY = my - (my - offsetY) * factor - H/2 * (factor - 1);
-  scale *= factor;
-  scale = Math.max(0.3, Math.min(3, scale));
-  draw();
-}, { passive: false });
-
-// Touch support
-let lastTouchDist = 0;
-canvas.addEventListener('touchstart', e => {
-  if (e.touches.length === 1) {
-    const t = e.touches[0];
-    dragging = true;
-    dragStart = { x: t.clientX - offsetX, y: t.clientY - offsetY };
-  } else if (e.touches.length === 2) {
-    lastTouchDist = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    );
-  }
-});
-
-canvas.addEventListener('touchmove', e => {
+let ltd=0;
+function onTS(e){
   e.preventDefault();
-  if (e.touches.length === 1 && dragging) {
-    offsetX = e.touches[0].clientX - dragStart.x;
-    offsetY = e.touches[0].clientY - dragStart.y;
-    draw();
-  } else if (e.touches.length === 2) {
-    const dist = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    );
-    const factor = dist / lastTouchDist;
-    scale *= factor;
-    scale = Math.max(0.3, Math.min(3, scale));
-    lastTouchDist = dist;
-    draw();
+  if(e.touches.length===1){
+    const t=e.touches[0], r=canvas.getBoundingClientRect();
+    const mx=t.clientX-r.left,my=t.clientY-r.top;
+    const hit=nodeAt(mx,my);
+    mdNode=hit; mdPos={x:mx,y:my}; mdTime=Date.now(); didDrag=false;
+    if(hit){ const w=s2w(mx,my); dragOff={x:w.x-hit.x,y:w.y-hit.y}; }
+    else{ panning=true; panStart={x:t.clientX-camX,y:t.clientY-camY}; }
+  } else if(e.touches.length===2){
+    panning=false;
+    ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
   }
-}, { passive: false });
+}
+function onTM(e){
+  e.preventDefault();
+  if(e.touches.length===1){
+    const t=e.touches[0], r=canvas.getBoundingClientRect();
+    const mx=t.clientX-r.left,my=t.clientY-r.top;
+    if(mdNode&&!draggingNode){ const dx=mx-mdPos.x,dy=my-mdPos.y; if(dx*dx+dy*dy>18){draggingNode=mdNode;didDrag=true;} }
+    if(draggingNode){ const w=s2w(mx,my); draggingNode.x=w.x-dragOff.x; draggingNode.y=w.y-dragOff.y; draggingNode.vx=0;draggingNode.vy=0; }
+    else if(panning){ camX=t.clientX-panStart.x; camY=t.clientY-panStart.y; }
+  } else if(e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    const mx=(e.touches[0].clientX+e.touches[1].clientX)/2, my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    const f=d/ltd;
+    const wx=(mx-W/2-camX)/camZ,wy=(my-H/2-camY)/camZ;
+    camZ=Math.max(0.15,Math.min(5,camZ*f));
+    camX=mx-W/2-wx*camZ; camY=my-H/2-wy*camZ;
+    ltd=d;
+  }
+}
+function onTE(){
+  if(!didDrag&&mdNode&&Date.now()-mdTime<400) clickNode(mdNode);
+  draggingNode=null; panning=false; mdNode=null;
+}
 
-canvas.addEventListener('touchend', () => { dragging = false; });
+// ══════════════════════════════════════════
+// CLICK LOGIC
+// ══════════════════════════════════════════
+function clickNode(n){
+  if(n.type==='center') return;
+  clickCounts[n.id]=(clickCounts[n.id]||0)+1;
+  n.clicks=clickCounts[n.id];
+  if(n.type==='topic') n.r=n.baseR+Math.min(n.clicks*3,26);
+  savePersist();
+  selectedNode=n;
+  if(n.type==='umbrella') toggleCollapse(n);
+  openPanel(n);
+}
 
-// ─── Sidebar ─────────────────────────────────────────────────────────────────
-function openSidebar(node) {
-  selectedNode = node;
-  const t = node.topic;
-  const session = sessions[activeSessionIdx];
+function toggleCollapse(n){
+  n.collapsed=!n.collapsed;
+  simSteps=80;
+}
 
-  document.getElementById('sb-topic').textContent = t.name;
-  document.getElementById('sb-freq').textContent = t.frequency + ' discussion frequency';
-  document.getElementById('sb-summary').textContent = t.summary;
+// ══════════════════════════════════════════
+// TOOLTIP
+// ══════════════════════════════════════════
+const tip=document.getElementById('tip');
+function showTip(n,cx,cy){
+  let t=n.label;
+  if(n.type==='umbrella') t+=' — click to '+(n.collapsed?'expand':'collapse')+', drag to move';
+  else if(n.data&&n.data.summary) t+='\n'+(n.data.summary).substring(0,90)+'…';
+  tip.textContent=t; tip.classList.add('show'); moveTip(cx,cy);
+}
+function moveTip(cx,cy){ tip.style.left=(cx+16)+'px'; tip.style.top=(cy-8)+'px'; }
+function hideTip(){ tip.classList.remove('show'); }
 
-  // Connections mentioning this topic
-  const conns = (session.connections || []).filter(c => c.includes(t.name));
-  const connEl = document.getElementById('sb-connections');
-  connEl.innerHTML = '';
-  if (conns.length) {
-    conns.forEach(c => {
-      const li = document.createElement('li');
-      li.textContent = c;
-      connEl.appendChild(li);
+// ══════════════════════════════════════════
+// PANEL
+// ══════════════════════════════════════════
+function openPanel(n){
+  document.getElementById('ptag').textContent = n.type==='umbrella'?'Umbrella Topic':'Topic';
+  document.getElementById('ptitle').textContent = n.label;
+
+  const meta=document.getElementById('pmeta'); meta.innerHTML='';
+  const chip=(text,cls)=>{ const d=document.createElement('div'); d.className='mchip '+cls; d.textContent=text; meta.appendChild(d); };
+  if(n.freq) chip(n.freq+' frequency','f'+n.freq[0]);
+  if(n.type==='umbrella') chip(n.children.length+' sub-topics','fu');
+  if(n.clicks>0) chip(n.clicks+' view'+(n.clicks!==1?'s':''),'fc');
+
+  const body=document.getElementById('pbody'); body.innerHTML='';
+
+  if(n.data&&n.data.summary){
+    const s=sec('Summary'); const p=document.createElement('p'); p.className='stext'; p.textContent=n.data.summary; s.appendChild(p); body.appendChild(s);
+  }
+
+  if(n.type==='umbrella'&&n.children.length>0){
+    const s=sec('Sub-topics'); const g=document.createElement('div'); g.className='spgrid';
+    n.children.forEach(cid=>{
+      const cn=nodes.find(x=>x.id===cid); if(!cn) return;
+      const p=document.createElement('div'); p.className='sppill'; p.textContent=cn.label;
+      p.onclick=()=>{ selectedNode=cn; openPanel(cn); };
+      g.appendChild(p);
     });
-    document.getElementById('sb-connections-section').style.display = 'block';
-  } else {
-    document.getElementById('sb-connections-section').style.display = 'none';
+    s.appendChild(g); body.appendChild(s);
   }
 
-  // Sources for this topic
-  const srcs = (session.sources || []).filter(s => s.topic === t.name);
-  const srcEl = document.getElementById('sb-sources');
-  srcEl.innerHTML = '';
-  if (srcs.length) {
-    srcs.forEach(s => {
-      const card = document.createElement('div');
-      card.className = 'source-card';
-      card.innerHTML = `<div class="source-type">${s.type}</div><div class="source-title">${s.title}</div><div class="source-desc">${s.description}</div>`;
-      srcEl.appendChild(card);
+  if(n.conns&&n.conns.length>0){
+    const s=sec('Connections');
+    n.conns.forEach(c=>{ const d=document.createElement('div'); d.className='citem'; d.textContent=c; s.appendChild(d); });
+    body.appendChild(s);
+  }
+
+  if(n.sources&&n.sources.length>0){
+    const s=sec('Sources & Research');
+    n.sources.forEach(src=>{
+      const c=document.createElement('div'); c.className='srcrd';
+      c.innerHTML=`<div class="stbdg">${src.type}</div><div class="stitle">${src.title}</div><div class="sdesc">${src.description}</div>`;
+      s.appendChild(c);
     });
-    document.getElementById('sb-sources-section').style.display = 'block';
-  } else {
-    document.getElementById('sb-sources-section').style.display = 'none';
+    body.appendChild(s);
   }
 
-  document.getElementById('sidebar').classList.add('open');
-  draw();
+  document.getElementById('panel').classList.add('open');
 }
 
-function closeSidebar() {
-  selectedNode = null;
-  document.getElementById('sidebar').classList.remove('open');
-  draw();
+function sec(label){
+  const d=document.createElement('div'); d.className='psec';
+  const l=document.createElement('div'); l.className='slbl'; l.textContent=label;
+  d.appendChild(l); return d;
 }
 
-// ─── Controls ────────────────────────────────────────────────────────────────
-function zoom(factor) {
-  scale *= factor;
-  scale = Math.max(0.3, Math.min(3, scale));
-  draw();
+function closePanel(){ document.getElementById('panel').classList.remove('open'); selectedNode=null; }
+
+// ══════════════════════════════════════════
+// CONTROLS
+// ══════════════════════════════════════════
+function zoomBy(f){ camZ=Math.max(0.15,Math.min(5,camZ*f)); }
+function resetView(){ camX=0;camY=0;camZ=1; }
+function shuffle(){
+  nodes.forEach(n=>{ if(n.type!=='center'){ n.x+=(Math.random()-.5)*120; n.y+=(Math.random()-.5)*120; } });
+  simSteps=200;
 }
 
-function resetView() {
-  scale = 1;
-  offsetX = 0;
-  offsetY = 0;
-  draw();
+// ══════════════════════════════════════════
+// DEMO DATA
+// ══════════════════════════════════════════
+function demoData(){
+  return [{
+    date:new Date().toISOString().split('T')[0],
+    className:'AP History',
+    topics:[
+      {name:'US-China Trade War',frequency:'high',summary:'Escalating tariffs and export controls between Washington and Beijing reshape global supply chains and spark tech decoupling.'},
+      {name:'Taiwan Tensions',frequency:'high',summary:'Military exercises and diplomatic standoffs raise questions about cross-strait stability and US security commitments.'},
+      {name:'NATO Expansion',frequency:'medium',summary:'New member states joining NATO shift European security architecture amid ongoing eastern tensions.'},
+      {name:'Ukraine Conflict',frequency:'high',summary:'The ongoing war reshapes European security, energy markets, and global grain supplies in fundamental ways.'},
+      {name:'AI Regulation',frequency:'medium',summary:'Governments race to regulate AI before its impact on elections, labor, and public safety becomes unmanageable.'},
+      {name:'Climate Policy',frequency:'medium',summary:'COP commitments versus real emissions show a widening gap as extreme weather events multiply worldwide.'},
+      {name:'Global Inflation',frequency:'low',summary:'Central banks navigate competing pressures of taming inflation without triggering recessions.'},
+      {name:'Middle East Diplomacy',frequency:'low',summary:'Shifting alliances and normalization talks are redrawing the geopolitical map across the region.'},
+    ],
+    connections:[
+      'US-China Trade War connects to Taiwan Tensions because semiconductor dominance is the core dispute underlying both conflicts.',
+      'NATO Expansion connects to Ukraine Conflict because the war accelerated Nordic membership bids and reshaped alliance priorities.',
+      'AI Regulation connects to US-China Trade War because export controls on AI chips are a central battleground in tech rivalry.',
+      'Climate Policy connects to Global Inflation because energy transition costs contribute to price pressures worldwide.',
+      'Ukraine Conflict connects to Global Inflation because energy and grain supply shocks from the war drove price surges globally.',
+      'Middle East Diplomacy connects to US-China Trade War because Gulf states leverage US-China rivalry to extract better deals.',
+    ],
+    sources:[
+      {topic:'US-China Trade War',title:'Chip War — Chris Miller',type:'Book',description:'How semiconductors became the defining resource of modern geopolitical competition.'},
+      {topic:'US-China Trade War',title:'The Hundred-Year Marathon',type:'Book',description:'Michael Pillsbury on China\'s long-term strategic goals intersecting with trade policy.'},
+      {topic:'Taiwan Tensions',title:'The Strait of Fire — Brendan Taylor',type:'Book',description:'Military scenarios and diplomatic pathways surrounding the Taiwan question.'},
+      {topic:'NATO Expansion',title:'NATO official website',type:'Website',description:'Primary documentation on membership criteria and the history of alliance expansion.'},
+      {topic:'Ukraine Conflict',title:'The Russo-Ukrainian War — Serhii Plokhy',type:'Book',description:'Harvard historian on the deep origins and trajectory of the Russia-Ukraine war.'},
+      {topic:'AI Regulation',title:'The Alignment Problem — Brian Christian',type:'Book',description:'Why AI safety matters and how regulatory frameworks are being designed globally.'},
+      {topic:'Climate Policy',title:'IPCC Sixth Assessment Report',type:'Website',description:'Definitive scientific consensus on climate trajectories and policy solutions.'},
+      {topic:'Global Inflation',title:'Federal Reserve Economic Data (FRED)',type:'Website',description:'Real-time data for tracking inflation, interest rates, and central bank policy.'},
+    ]
+  }];
 }
-
-// ─── Boot ─────────────────────────────────────────────────────────────────────
-window.addEventListener('resize', resize);
-resize();
-loadSessions();
-
-// Poll for new sessions every 3 seconds (so opening recorder and running pipeline auto-updates)
-setInterval(() => {
-  const raw = localStorage.getItem('agenticHistorySessions');
-  if (raw) {
-    try {
-      const fresh = JSON.parse(raw);
-      if (fresh.length !== sessions.length) {
-        sessions = fresh;
-        buildSessionPills();
-        buildSessionsList();
-        loadSession(activeSessionIdx < fresh.length ? activeSessionIdx : 0);
-      }
-    } catch(e) {}
-  }
-}, 3000);
 </script>
 </body>
 </html>
