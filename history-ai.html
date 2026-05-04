@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic History — Class Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --border-light: #333;
+    --text: #e8e4dc;
+    --text-muted: #6b6760;
+    --text-dim: #3d3b38;
+    --accent: #c8a96e;
+    --accent-dim: #8a6f3f;
+    --green: #4a7c59;
+    --green-bright: #6db88a;
+    --red: #7c4a4a;
+    --red-bright: #c47a7a;
+    --recording: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 14px;
+    margin-left: 10px;
+  }
+
+  .status-bar { display: flex; gap: 20px; align-items: center; }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    display: inline-block;
+    margin-right: 6px;
+  }
+  .status-dot.active { background: var(--green-bright); box-shadow: 0 0 6px var(--green-bright); }
+  .status-dot.error { background: var(--red-bright); }
+  .status-label { color: var(--text-muted); font-size: 11px; }
+
+  main { max-width: 900px; margin: 0 auto; padding: 48px 32px; }
+
+  .page-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 48px;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+  }
+  .page-title em { color: var(--accent); font-style: italic; }
+  .page-subtitle { color: var(--text-muted); font-size: 12px; margin-bottom: 48px; letter-spacing: 0.5px; }
+
+  .section { margin-bottom: 32px; }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .saved-badge {
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--green-bright);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .saved-badge.show { opacity: 1; }
+
+  .key-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .obs-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+
+  .key-field {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .key-field:focus-within { border-color: var(--accent-dim); }
+
+  .key-field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .key-field input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    width: 100%;
+  }
+  .key-field input::placeholder { color: var(--text-dim); }
+
+  /* Audio section: upload + record side by side */
+  .audio-area {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .upload-zone {
+    border: 1px dashed var(--border-light);
+    border-radius: 8px;
+    padding: 36px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--surface);
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent-dim); background: #1a1814; }
+  .upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0;
+    cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.4; }
+  .upload-title { font-family: 'Instrument Serif', serif; font-size: 18px; color: var(--text); margin-bottom: 4px; }
+  .upload-hint { color: var(--text-muted); font-size: 11px; }
+
+  .file-selected {
+    margin-top: 10px;
+    padding: 8px 14px;
+    background: #1a1a14;
+    border: 1px solid var(--accent-dim);
+    border-radius: 4px;
+    color: var(--accent);
+    font-size: 11px;
+    display: none;
+  }
+
+  /* Record panel */
+  .record-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    min-width: 160px;
+  }
+
+  .record-btn {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: #1a0f0f;
+    border: 2px solid var(--recording);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .record-btn:hover { background: #2a1515; transform: scale(1.05); }
+
+  .record-btn .dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--recording);
+    transition: all 0.2s;
+  }
+
+  .record-btn.recording { border-color: var(--red-bright); animation: pulse-border 1.2s ease-in-out infinite; }
+  .record-btn.recording .dot { border-radius: 4px; width: 18px; height: 18px; animation: pulse-dot 1.2s ease-in-out infinite; }
+
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(192,57,43,0); }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .record-label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; text-align: center; }
+  .record-timer { font-size: 18px; color: var(--red-bright); font-family: 'DM Mono', monospace; display: none; letter-spacing: 2px; }
+  .record-timer.visible { display: block; }
+
+  .record-ready {
+    font-size: 10px;
+    color: var(--green-bright);
+    text-align: center;
+    display: none;
+    line-height: 1.5;
+  }
+  .record-ready.show { display: block; }
+
+  /* Waveform visualizer */
+  .waveform {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 20px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .waveform.active { opacity: 1; }
+  .wave-bar {
+    width: 3px;
+    background: var(--red-bright);
+    border-radius: 2px;
+    height: 4px;
+    transition: height 0.1s;
+  }
+
+  .run-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--accent);
+    color: #0e0e0e;
+    border: none;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .run-btn:hover { background: #d4b97e; transform: translateY(-1px); }
+  .run-btn:active { transform: translateY(0); }
+  .run-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; transform: none; }
+
+  .pipeline { margin-top: 40px; display: none; }
+  .pipeline.visible { display: block; }
+
+  .step {
+    display: flex; gap: 16px; margin-bottom: 2px;
+    padding: 14px 16px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 4px;
+    align-items: flex-start; transition: all 0.3s;
+  }
+  .step.active { border-color: var(--accent-dim); background: #1a1814; }
+  .step.done { border-color: var(--green); background: #111614; }
+  .step.error { border-color: var(--red); background: #161110; }
+
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--text-muted); flex-shrink: 0; margin-top: 1px;
+  }
+  .step.active .step-num { border-color: var(--accent); color: var(--accent); }
+  .step.done .step-num { border-color: var(--green-bright); color: var(--green-bright); background: #1a2e22; }
+  .step.error .step-num { border-color: var(--red-bright); color: var(--red-bright); }
+
+  .step-content { flex: 1; }
+  .step-title { font-size: 12px; color: var(--text); margin-bottom: 3px; }
+  .step-detail { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+  .step.active .step-detail { color: var(--accent); }
+  .step.done .step-detail { color: var(--green-bright); }
+  .step.error .step-detail { color: var(--red-bright); }
+
+  .output-section { margin-top: 32px; display: none; }
+  .output-section.visible { display: block; }
+
+  .output-tabs { display: flex; gap: 2px; margin-bottom: 0; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 10px 18px; font-size: 11px; letter-spacing: 0.5px;
+    color: var(--text-muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top: none; border-radius: 0 0 6px 6px;
+    padding: 20px; display: none; min-height: 200px;
+  }
+  .tab-content.active { display: block; }
+
+  .topics-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .topic-chip {
+    padding: 5px 12px; background: #1a1814;
+    border: 1px solid var(--accent-dim); border-radius: 20px;
+    color: var(--accent); font-size: 11px;
+  }
+
+  .connections-list { list-style: none; }
+  .connections-list li {
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    color: var(--text); font-size: 12px; line-height: 1.6;
+  }
+  .connections-list li:last-child { border-bottom: none; }
+  .connections-list li::before { content: '→ '; color: var(--accent); }
+
+  .sources-list { list-style: none; }
+  .sources-list li { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .sources-list li:last-child { border-bottom: none; }
+  .source-topic { color: var(--accent); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .source-title { color: var(--text); margin-bottom: 2px; }
+  .source-desc { color: var(--text-muted); font-size: 11px; }
+
+  .transcript-box {
+    background: #111; border: 1px solid var(--border); border-radius: 4px;
+    padding: 16px; max-height: 300px; overflow-y: auto;
+    font-size: 12px; line-height: 1.8; color: var(--text-muted); white-space: pre-wrap;
+  }
+
+  .save-btn {
+    margin-top: 16px; padding: 12px 24px; background: var(--green);
+    color: var(--text); border: none; border-radius: 4px;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+  }
+  .save-btn:hover { background: var(--green-bright); color: #0e0e0e; }
+
+  .success-banner {
+    margin-top: 12px; padding: 12px 16px; background: #111614;
+    border: 1px solid var(--green); border-radius: 4px;
+    color: var(--green-bright); font-size: 11px; display: none;
+  }
+
+  .spinner {
+    display: inline-block; width: 10px; height: 10px;
+    border: 1px solid var(--accent-dim); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-right: 6px; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer {
+    border-top: 1px solid var(--border); padding: 20px 32px;
+    text-align: center; color: var(--text-dim); font-size: 10px;
+    letter-spacing: 1px; margin-top: 60px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Agentic History <span>class intelligence</span></div>
+  <div class="status-bar">
+    <div>
+      <span class="status-dot" id="obsidian-dot"></span>
+      <span class="status-label" id="obsidian-status">obsidian not configured</span>
+    </div>
+    <div>
+      <span class="status-dot" id="gemini-dot"></span>
+      <span class="status-label" id="gemini-status">gemini not configured</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <h1 class="page-title">Current Events<br><em>Intelligence System</em></h1>
+  <p class="page-subtitle">// record or upload audio → transcribe → analyze → write to obsidian</p>
+
+  <!-- API Keys -->
+  <div class="section">
+    <div class="section-label">
+      Configuration
+      <span class="saved-badge" id="saved-badge">✓ saved locally</span>
+    </div>
+    <div class="key-grid">
+      <div class="key-field">
+        <label>Gemini API Key</label>
+        <input type="password" id="gemini-key" placeholder="AIza..." oninput="saveKeys()">
+      </div>
+      <div class="key-field">
+        <label>Obsidian API Key</label>
+        <input type="password" id="obs-key" placeholder="ba247d..." oninput="saveKeys()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Obsidian Config -->
+  <div class="section">
+    <div class="section-label">Obsidian Connection</div>
+    <div class="obs-grid">
+      <div class="key-field">
+        <label>Vault Folder</label>
+        <input type="text" id="obs-folder" placeholder="Sessions" value="Sessions" oninput="saveKeys()">
+      </div>
+      <div class="key-field">
+        <label>Obsidian URL</label>
+        <input type="text" id="obs-url" placeholder="http://127.0.0.1:27123" oninput="saveKeys()">
+      </div>
+      <div class="key-field">
+        <label>Class Name</label>
+        <input type="text" id="class-name" placeholder="AP History" oninput="saveKeys()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio: Upload + Record -->
+  <div class="section">
+    <div class="section-label">Audio Recording</div>
+    <div class="audio-area">
+
+      <!-- Upload zone -->
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="audio-file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm" onchange="onFileSelect(this)">
+        <div class="upload-icon">◎</div>
+        <div class="upload-title">Drop your class recording here</div>
+        <div class="upload-hint">or click to browse — mp3, wav, m4a, ogg</div>
+        <div class="file-selected" id="file-selected"></div>
+      </div>
+
+      <!-- Record panel -->
+      <div class="record-panel">
+        <div class="waveform" id="waveform">
+          <div class="wave-bar" id="wb1"></div>
+          <div class="wave-bar" id="wb2"></div>
+          <div class="wave-bar" id="wb3"></div>
+          <div class="wave-bar" id="wb4"></div>
+          <div class="wave-bar" id="wb5"></div>
+          <div class="wave-bar" id="wb6"></div>
+          <div class="wave-bar" id="wb7"></div>
+        </div>
+
+        <button class="record-btn" id="record-btn" onclick="toggleRecord()">
+          <div class="dot"></div>
+        </button>
+
+        <div class="record-timer" id="record-timer">0:00</div>
+        <div class="record-label" id="record-label">Click to record</div>
+        <div class="record-ready" id="record-ready"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="run-btn" id="run-btn" onclick="runPipeline()" disabled>
+    ▶ &nbsp; Run Pipeline
+  </button>
+
+  <!-- Pipeline Steps -->
+  <div class="pipeline" id="pipeline">
+    <div class="section-label" style="margin-top:32px; margin-bottom:16px;">Pipeline</div>
+    <div class="step" id="step-1">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">Transcription</div>
+        <div class="step-detail" id="step-1-detail">Waiting...</div>
+      </div>
+    </div>
+    <div class="step" id="step-2">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Topic Extraction</div>
+        <div class="step-detail" id="step-2-detail">Waiting...</div>
+      </div>
+    </div>
+    <div class="step" id="step-3">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">Connection Mapping</div>
+        <div class="step-detail" id="step-3-detail">Waiting...</div>
+      </div>
+    </div>
+    <div class="step" id="step-4">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">Source Research</div>
+        <div class="step-detail" id="step-4-detail">Waiting...</div>
+      </div>
+    </div>
+    <div class="step" id="step-5">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">Write to Obsidian</div>
+        <div class="step-detail" id="step-5-detail">Waiting...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="output-section" id="output-section">
+    <div class="section-label" style="margin-bottom:0">Output</div>
+    <div class="output-tabs">
+      <div class="tab active" onclick="switchTab(event,'topics')">Topics</div>
+      <div class="tab" onclick="switchTab(event,'connections')">Connections</div>
+      <div class="tab" onclick="switchTab(event,'sources')">Sources</div>
+      <div class="tab" onclick="switchTab(event,'transcript')">Transcript</div>
+      <div class="tab" onclick="switchTab(event,'note')">Obsidian Note</div>
+    </div>
+    <div class="tab-content active" id="tab-topics">
+      <div class="topics-grid" id="topics-chips"></div>
+    </div>
+    <div class="tab-content" id="tab-connections">
+      <ul class="connections-list" id="connections-list"></ul>
+    </div>
+    <div class="tab-content" id="tab-sources">
+      <ul class="sources-list" id="sources-list"></ul>
+    </div>
+    <div class="tab-content" id="tab-transcript">
+      <div class="transcript-box" id="transcript-box"></div>
+    </div>
+    <div class="tab-content" id="tab-note">
+      <div class="transcript-box" id="note-box"></div>
+      <button class="save-btn" onclick="saveToObsidian()">↓ Save to Obsidian Vault</button>
+      <div class="success-banner" id="success-banner"></div>
+    </div>
+  </div>
+</main>
+
+<footer>Agentic History &nbsp;·&nbsp; Built for Thacher School &nbsp;·&nbsp; Powered by Gemini</footer>
+
+<script>
+  // ─── State ───────────────────────────────────────────────────────────────
+  let transcript = '';
+  let analysisData = null;
+  let noteContent = '';
+  let audioBlob = null;
+  let mediaRecorder = null;
+  let recordingChunks = [];
+  let timerInterval = null;
+  let timerSeconds = 0;
+  let analyserNode = null;
+  let animFrame = null;
+
+  // ─── Load saved keys on startup ──────────────────────────────────────────
+  window.addEventListener('load', () => {
+    const saved = JSON.parse(localStorage.getItem('agenticHistoryConfig') || '{}');
+    if (saved.geminiKey) document.getElementById('gemini-key').value = saved.geminiKey;
+    if (saved.obsKey)    document.getElementById('obs-key').value    = saved.obsKey;
+    if (saved.obsUrl)    document.getElementById('obs-url').value    = saved.obsUrl;
+    if (saved.obsFolder) document.getElementById('obs-folder').value = saved.obsFolder;
+    if (saved.className) document.getElementById('class-name').value = saved.className;
+    updateStatusDots();
+  });
+
+  // ─── Save keys to localStorage ───────────────────────────────────────────
+  let saveTimeout = null;
+  function saveKeys() {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      localStorage.setItem('agenticHistoryConfig', JSON.stringify({
+        geminiKey: document.getElementById('gemini-key').value.trim(),
+        obsKey:    document.getElementById('obs-key').value.trim(),
+        obsUrl:    document.getElementById('obs-url').value.trim(),
+        obsFolder: document.getElementById('obs-folder').value.trim(),
+        className: document.getElementById('class-name').value.trim(),
+      }));
+      const badge = document.getElementById('saved-badge');
+      badge.classList.add('show');
+      setTimeout(() => badge.classList.remove('show'), 2000);
+      updateStatusDots();
+    }, 600);
+  }
+
+  function updateStatusDots() {
+    const gemini = document.getElementById('gemini-key').value.trim();
+    const obs    = document.getElementById('obs-key').value.trim();
+
+    document.getElementById('gemini-dot').className    = 'status-dot' + (gemini ? ' active' : '');
+    document.getElementById('gemini-status').textContent = gemini ? 'gemini configured' : 'gemini not configured';
+    document.getElementById('obsidian-dot').className  = 'status-dot' + (obs ? ' active' : '');
+    document.getElementById('obsidian-status').textContent = obs ? 'obsidian configured' : 'obsidian not configured';
+
+    checkRunnable();
+  }
+
+  function checkRunnable() {
+    const gemini = document.getElementById('gemini-key').value.trim();
+    const obs    = document.getElementById('obs-key').value.trim();
+    const hasAudio = audioBlob || document.getElementById('audio-file').files[0];
+    document.getElementById('run-btn').disabled = !(gemini && obs && hasAudio);
+  }
+
+  // ─── File upload ─────────────────────────────────────────────────────────
+  function onFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    audioBlob = null; // clear any recorded blob
+    showFileSelected('✓ ' + file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)');
+    document.getElementById('record-ready').classList.remove('show');
+    checkRunnable();
+  }
+
+  function showFileSelected(text) {
+    const el = document.getElementById('file-selected');
+    el.textContent = text;
+    el.style.display = 'block';
+  }
+
+  // Drag and drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      document.getElementById('audio-file').files = e.dataTransfer.files;
+      audioBlob = null;
+      showFileSelected('✓ ' + file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)');
+      document.getElementById('record-ready').classList.remove('show');
+      checkRunnable();
+    }
+  });
+
+  // ─── Recording ───────────────────────────────────────────────────────────
+  async function toggleRecord() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Waveform visualizer
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaStreamSource(stream);
+      analyserNode = audioCtx.createAnalyser();
+      analyserNode.fftSize = 32;
+      source.connect(analyserNode);
+      animateWaveform();
+
+      recordingChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordingChunks.push(e.data); };
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(recordingChunks, { type: 'audio/webm' });
+        stream.getTracks().forEach(t => t.stop());
+        audioCtx.close();
+        cancelAnimationFrame(animFrame);
+        document.getElementById('waveform').classList.remove('active');
+        resetWaveBars();
+
+        const secs = timerSeconds;
+        const m = Math.floor(secs/60), s = secs%60;
+        const label = `✓ Recording: ${m}:${s.toString().padStart(2,'0')}`;
+        showFileSelected(label);
+        document.getElementById('record-ready').textContent = 'Recording ready — hit Run Pipeline';
+        document.getElementById('record-ready').classList.add('show');
+        checkRunnable();
+      };
+
+      mediaRecorder.start();
+      timerSeconds = 0;
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        const m = Math.floor(timerSeconds/60), s = timerSeconds%60;
+        document.getElementById('record-timer').textContent = m + ':' + s.toString().padStart(2,'0');
+      }, 1000);
+
+      document.getElementById('record-btn').classList.add('recording');
+      document.getElementById('record-timer').classList.add('visible');
+      document.getElementById('record-label').textContent = 'Click to stop';
+      document.getElementById('waveform').classList.add('active');
+
+    } catch(e) {
+      alert('Microphone access denied. Please allow microphone access in your browser settings.');
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorder) mediaRecorder.stop();
+    clearInterval(timerInterval);
+    document.getElementById('record-btn').classList.remove('recording');
+    document.getElementById('record-timer').classList.remove('visible');
+    document.getElementById('record-label').textContent = 'Click to record';
+  }
+
+  function animateWaveform() {
+    if (!analyserNode) return;
+    const data = new Uint8Array(analyserNode.frequencyBinCount);
+    analyserNode.getByteFrequencyData(data);
+    const bars = document.querySelectorAll('.wave-bar');
+    bars.forEach((bar, i) => {
+      const val = data[i] || 0;
+      bar.style.height = Math.max(3, (val / 255) * 18) + 'px';
+    });
+    animFrame = requestAnimationFrame(animateWaveform);
+  }
+
+  function resetWaveBars() {
+    document.querySelectorAll('.wave-bar').forEach(b => b.style.height = '4px');
+  }
+
+  // ─── Pipeline ─────────────────────────────────────────────────────────────
+  function setStep(n, state, detail) {
+    const step = document.getElementById('step-' + n);
+    step.className = 'step ' + state;
+    document.getElementById('step-' + n + '-detail').innerHTML =
+      state === 'active' ? '<span class="spinner"></span>' + detail : detail;
+  }
+
+  function switchTab(e, name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+  }
+
+  async function getAudioBase64() {
+    // Use recorded blob if available, otherwise use file input
+    const blob = audioBlob || document.getElementById('audio-file').files[0];
+    if (!blob) throw new Error('No audio source');
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ base64: reader.result.split(',')[1], mimeType: blob.type || 'audio/webm' });
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function runPipeline() {
+    const geminiKey = document.getElementById('gemini-key').value.trim();
+    const obsKey    = document.getElementById('obs-key').value.trim();
+    const obsUrl    = document.getElementById('obs-url').value.trim() || 'http://127.0.0.1:27123';
+    const folder    = document.getElementById('obs-folder').value.trim() || 'Sessions';
+    const className = document.getElementById('class-name').value.trim() || 'History';
+
+    document.getElementById('pipeline').classList.add('visible');
+    document.getElementById('output-section').classList.remove('visible');
+    document.getElementById('run-btn').disabled = true;
+    document.getElementById('success-banner').style.display = 'none';
+
+    // Step 1: Transcribe
+    setStep(1, 'active', 'Reading audio...');
+    try {
+      const { base64, mimeType } = await getAudioBase64();
+      setStep(1, 'active', 'Sending to Gemini for transcription...');
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [
+              { text: "Transcribe this audio recording of a history class discussion about current events. Output only the transcription, no commentary." },
+              { inline_data: { mime_type: mimeType, data: base64 } }
+            ]}]
+          })
+        }
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      transcript = data.candidates[0].content.parts[0].text;
+      document.getElementById('transcript-box').textContent = transcript;
+      setStep(1, 'done', 'Transcription complete — ' + transcript.split(' ').length + ' words');
+    } catch(e) {
+      setStep(1, 'error', 'Error: ' + e.message);
+      document.getElementById('run-btn').disabled = false;
+      return;
+    }
+
+    // Step 2: Topics
+    setStep(2, 'active', 'Identifying key topics...');
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `Analyze this history class transcript and extract the main topics discussed. Return ONLY valid JSON, no markdown, no code blocks.
+
+Format: {"topics": [{"name": "Topic Name", "frequency": "high/medium/low", "summary": "1-2 sentence summary"}]}
+
+Rank topics by how much time was spent on them. Include 3-8 topics.
+
+Transcript:
+${transcript}` }]}],
+            generationConfig: { temperature: 0.3 }
+          })
+        }
+      );
+      const data = await res.json();
+      let text = data.candidates[0].content.parts[0].text.trim().replace(/```json|```/g,'').trim();
+      analysisData = JSON.parse(text);
+      const chipsEl = document.getElementById('topics-chips');
+      chipsEl.innerHTML = '';
+      analysisData.topics.forEach(t => {
+        const chip = document.createElement('div');
+        chip.className = 'topic-chip';
+        chip.textContent = t.name + ' · ' + t.frequency;
+        chipsEl.appendChild(chip);
+      });
+      setStep(2, 'done', analysisData.topics.length + ' topics: ' + analysisData.topics.slice(0,3).map(t=>t.name).join(', '));
+    } catch(e) {
+      setStep(2, 'error', 'Error: ' + e.message);
+      document.getElementById('run-btn').disabled = false;
+      return;
+    }
+
+    // Step 3: Connections
+    setStep(3, 'active', 'Mapping historical connections...');
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `Based on this history class discussion, identify meaningful connections between topics. Think historically.
+
+Return ONLY valid JSON, no markdown.
+Format: {"connections": ["Topic A connects to Topic B because...", "..."]}
+
+Include 3-6 connections.
+Topics: ${analysisData.topics.map(t=>t.name).join(', ')}
+Transcript: ${transcript.substring(0,2000)}` }]}],
+            generationConfig: { temperature: 0.5 }
+          })
+        }
+      );
+      const data = await res.json();
+      let text = data.candidates[0].content.parts[0].text.trim().replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(text);
+      analysisData.connections = parsed.connections;
+      const listEl = document.getElementById('connections-list');
+      listEl.innerHTML = '';
+      parsed.connections.forEach(c => {
+        const li = document.createElement('li'); li.textContent = c; listEl.appendChild(li);
+      });
+      setStep(3, 'done', parsed.connections.length + ' connections mapped');
+    } catch(e) {
+      setStep(3, 'error', 'Error: ' + e.message);
+      document.getElementById('run-btn').disabled = false;
+      return;
+    }
+
+    // Step 4: Sources
+    setStep(4, 'active', 'Researching sources...');
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `For each major topic from this history class, suggest 2 high-quality research sources (books, documentaries, articles, websites) for a high school student.
+
+Return ONLY valid JSON, no markdown.
+Format: {"sources": [{"topic": "Topic Name", "title": "Source Title", "type": "Book/Documentary/Article/Website", "description": "1 sentence on why useful"}]}
+
+Topics: ${analysisData.topics.slice(0,4).map(t=>t.name).join(', ')}` }]}],
+            generationConfig: { temperature: 0.4 }
+          })
+        }
+      );
+      const data = await res.json();
+      let text = data.candidates[0].content.parts[0].text.trim().replace(/```json|```/g,'').trim();
+      const parsed = JSON.parse(text);
+      analysisData.sources = parsed.sources;
+      const srcEl = document.getElementById('sources-list');
+      srcEl.innerHTML = '';
+      parsed.sources.forEach(s => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div class="source-topic">${s.topic} · ${s.type}</div><div class="source-title">${s.title}</div><div class="source-desc">${s.description}</div>`;
+        srcEl.appendChild(li);
+      });
+      setStep(4, 'done', parsed.sources.length + ' sources found');
+    } catch(e) {
+      setStep(4, 'error', 'Error: ' + e.message);
+      document.getElementById('run-btn').disabled = false;
+      return;
+    }
+
+    // Step 5: Build note + write to Obsidian
+    setStep(5, 'active', 'Building Obsidian note...');
+    try {
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      const displayDate = today.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      const wikiTopics = analysisData.topics.map(t => `[[${t.name}]]`).join(', ');
+
+      noteContent = `# ${className} — Current Events: ${displayDate}
+
+## Topics Discussed
+${analysisData.topics.map((t,i) => `${i+1}. **${t.name}** *(${t.frequency} discussion)*\n   ${t.summary}`).join('\n')}
+
+## Key Connections
+${analysisData.connections.map(c => `- ${c}`).join('\n')}
+
+## Related Topics
+${wikiTopics}
+
+## Sources & Further Research
+${analysisData.sources.map(s => `### ${s.topic}\n**${s.title}** *(${s.type})*\n${s.description}`).join('\n\n')}
+
+## Raw Transcript
+${transcript}
+
+---
+*Generated by Agentic History on ${displayDate}*
+*Tags: #current-events #${className.toLowerCase().replace(/\s+/g,'-')} #${dateStr}*`;
+
+      document.getElementById('note-box').textContent = noteContent;
+
+      setStep(5, 'active', 'Writing to Obsidian vault...');
+      const filename = `${folder}/${className} ${dateStr}.md`;
+      const writeRes = await fetch(`${obsUrl}/vault/${encodeURIComponent(filename)}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${obsKey}`, 'Content-Type': 'text/markdown' },
+        body: noteContent
+      });
+
+      if (!writeRes.ok) throw new Error('Obsidian returned ' + writeRes.status);
+      setStep(5, 'done', 'Note saved → ' + filename);
+      document.getElementById('success-banner').textContent = `✓ Written to your Obsidian vault: "${filename}" — open Obsidian to see it!`;
+      document.getElementById('success-banner').style.display = 'block';
+    } catch(e) {
+      setStep(5, 'error', 'Obsidian write failed: ' + e.message + ' — note is still in the Output tab');
+    }
+
+    // Save session to localStorage so mindmap.html picks it up
+    const sessionData = {
+      date: dateStr,
+      className,
+      topics: analysisData.topics,
+      connections: analysisData.connections,
+      sources: analysisData.sources,
+      transcript
+    };
+    const existing = JSON.parse(localStorage.getItem('agenticHistorySessions') || '[]');
+    const idx = existing.findIndex(s => s.date === dateStr && s.className === className);
+    if (idx >= 0) existing[idx] = sessionData;
+    else existing.unshift(sessionData);
+    localStorage.setItem('agenticHistorySessions', JSON.stringify(existing));
+
+    document.getElementById('output-section').classList.add('visible');
+    document.getElementById('run-btn').disabled = false;
+    document.getElementById('run-btn').textContent = '▶  Run Again';
+  }
+
+  async function saveToObsidian() {
+    const obsKey  = document.getElementById('obs-key').value.trim();
+    const obsUrl  = document.getElementById('obs-url').value.trim() || 'http://127.0.0.1:27123';
+    const folder  = document.getElementById('obs-folder').value.trim() || 'Sessions';
+    const className = document.getElementById('class-name').value.trim() || 'History';
+    const dateStr = new Date().toISOString().split('T')[0];
+    const filename = `${folder}/${className} ${dateStr}.md`;
+    try {
+      const res = await fetch(`${obsUrl}/vault/${encodeURIComponent(filename)}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${obsKey}`, 'Content-Type': 'text/markdown' },
+        body: noteContent
+      });
+      if (!res.ok) throw new Error('Status ' + res.status);
+      document.getElementById('success-banner').textContent = `✓ Saved to "${filename}" in your Obsidian vault!`;
+      document.getElementById('success-banner').style.display = 'block';
+    } catch(e) {
+      document.getElementById('success-banner').textContent = '✗ Could not reach Obsidian. Make sure Obsidian is open and Local REST API plugin is running.';
+      document.getElementById('success-banner').style.display = 'block';
+    }
+  }
+</script>
+</body>
+</html>
