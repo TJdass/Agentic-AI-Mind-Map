@@ -81,6 +81,8 @@ body{font-family:'Syne',sans-serif;color:var(--text);cursor:default}
 .srcrd:hover{border-color:var(--border2)}
 .stbdg{display:inline-block;padding:2px 7px;background:var(--surface3);border-radius:3px;font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
 .stitle{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.stitle-link{display:block;font-size:13px;font-weight:600;color:var(--gold2);margin-bottom:4px;text-decoration:none;transition:color .15s}
+.stitle-link:hover{color:var(--gold);text-decoration:underline}
 .sdesc{font-size:11px;color:var(--text2);line-height:1.6}
 .spgrid{display:flex;flex-wrap:wrap;gap:6px}
 .sppill{padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s}
@@ -109,7 +111,6 @@ body{font-family:'Syne',sans-serif;color:var(--text);cursor:default}
   <div class="header-center" id="schips"></div>
   <div class="hactions">
     <button class="btn-g" onclick="resetView()">Reset view</button>
-    <button class="btn-g" onclick="shuffle()">Shuffle</button>
     <button class="btn-p" onclick="window.open('history-ai.html')">+ New session</button>
   </div>
 </div>
@@ -205,7 +206,14 @@ function loadSessions(){
   if(!sessions.length) sessions = demoData();
   buildChips();
   activateSession(0);
-  setInterval(pollSessions, 3000);
+  setInterval(()=>{
+    try{
+      const r=localStorage.getItem('agenticHistorySessions');
+      if(!r) return;
+      const f=JSON.parse(r);
+      if(f.length!==sessions.length){ sessions=f; buildChips(); buildGraph(); document.getElementById('empty').classList.toggle('hidden',nodes.length>0); }
+    }catch(e){}
+  },3000);
 }
 
 function pollSessions(){
@@ -233,56 +241,82 @@ function activateSession(i){
   activeIdx=i;
   buildChips();
   closePanel();
-  buildGraph(sessions[i]);
-  simSteps=200;
+  buildGraph();
   document.getElementById('empty').classList.toggle('hidden', nodes.length>0);
 }
 
 // ══════════════════════════════════════════
-// GRAPH BUILDING
+// GRAPH BUILDING — merges ALL sessions into one persistent map
 // ══════════════════════════════════════════
-function buildGraph(session){
+function buildGraph(){
   nodes=[]; edges=[];
-  const topics = session.topics||[];
-  const conns  = session.connections||[];
-  const srcs   = session.sources||[];
 
-  // Center
-  addNode('__center__', session.className, 0, 0, 56, 'center', null, null);
+  // Merge topics/connections/sources across ALL sessions
+  const allTopics=[], allConns=[], allSrcs=[];
+  const seenTopics=new Set(), seenConns=new Set(), seenSrcs=new Set();
 
-  // Auto-cluster connected topics under umbrella nodes
-  const clusters = cluster(topics, conns);
+  sessions.forEach(session=>{
+    (session.topics||[]).forEach(t=>{
+      if(!seenTopics.has(t.name)){
+        seenTopics.add(t.name);
+        allTopics.push({...t});
+      } else {
+        // If topic recurs across sessions, upgrade frequency
+        const ex=allTopics.find(x=>x.name===t.name);
+        if(ex&&t.frequency==='high') ex.frequency='high';
+      }
+    });
+    (session.connections||[]).forEach(c=>{
+      if(!seenConns.has(c)){ seenConns.add(c); allConns.push(c); }
+    });
+    (session.sources||[]).forEach(s=>{
+      if(!seenSrcs.has(s.title)){ seenSrcs.add(s.title); allSrcs.push(s); }
+    });
+  });
 
+  const className = sessions[0]?.className || 'History Class';
+  const savedPos = loadNodePositions();
+
+  // Center node
+  addNode('__center__', className, 0, 0, 56, 'center', null, null);
+
+  // Cluster and place
+  const clusters = cluster(allTopics, allConns);
   clusters.forEach((cl, ci)=>{
     const angle = (2*Math.PI*ci/clusters.length) - Math.PI/2;
     if(cl.topics.length === 1){
       const t = cl.topics[0];
-      const d = 240 + (Math.random()-0.5)*40;
-      const n = addNode(t.name, t.name, Math.cos(angle)*d, Math.sin(angle)*d, baseR(t.frequency), 'topic', t.frequency, t);
-      n.sources = srcs.filter(s=>s.topic===t.name);
-      n.conns   = conns.filter(c=>c.toLowerCase().includes(t.name.toLowerCase()));
+      const sp = savedPos[t.name];
+      const defX=Math.cos(angle)*240, defY=Math.sin(angle)*240;
+      const n = addNode(t.name, t.name, sp?sp.x:defX, sp?sp.y:defY, baseR(t.frequency), 'topic', t.frequency, t);
+      n.sources = allSrcs.filter(s=>s.topic===t.name);
+      n.conns   = allConns.filter(c=>c.toLowerCase().includes(t.name.toLowerCase()));
       edges.push({from:'__center__', to:t.name, kind:'spoke'});
     } else {
-      const ud = 195 + (Math.random()-0.5)*20;
-      const ub = addNode('__umb_'+ci, cl.label, Math.cos(angle)*ud, Math.sin(angle)*ud, 44, 'umbrella', null, null);
+      const uid = '__umb_'+ci;
+      const sp = savedPos[uid];
+      const defX=Math.cos(angle)*195, defY=Math.sin(angle)*195;
+      const ub = addNode(uid, cl.label, sp?sp.x:defX, sp?sp.y:defY, 44, 'umbrella', null, null);
       ub.children = cl.topics.map(t=>t.name);
       ub.collapsed = false;
-      edges.push({from:'__center__', to:ub.id, kind:'spoke'});
+      edges.push({from:'__center__', to:uid, kind:'spoke'});
       cl.topics.forEach((t,ti)=>{
         const sub = angle + (ti-(cl.topics.length-1)/2)*0.52;
-        const sd  = ud + 155 + (Math.random()-0.5)*30;
-        const n   = addNode(t.name, t.name, Math.cos(sub)*sd, Math.sin(sub)*sd, baseR(t.frequency), 'topic', t.frequency, t);
-        n.parentId = ub.id;
-        n.sources  = srcs.filter(s=>s.topic===t.name);
-        n.conns    = conns.filter(c=>c.toLowerCase().includes(t.name.toLowerCase()));
-        edges.push({from:ub.id, to:t.name, kind:'child'});
+        const sd = 350;
+        const tp = savedPos[t.name];
+        const defTX=Math.cos(sub)*sd, defTY=Math.sin(sub)*sd;
+        const n = addNode(t.name, t.name, tp?tp.x:defTX, tp?tp.y:defTY, baseR(t.frequency), 'topic', t.frequency, t);
+        n.parentId = uid;
+        n.sources  = allSrcs.filter(s=>s.topic===t.name);
+        n.conns    = allConns.filter(c=>c.toLowerCase().includes(t.name.toLowerCase()));
+        edges.push({from:uid, to:t.name, kind:'child'});
       });
     }
   });
 
   // Cross-connection edges
-  conns.forEach(c=>{
-    const matched = topics.filter(t=>c.toLowerCase().includes(t.name.toLowerCase())).map(t=>t.name);
+  allConns.forEach(c=>{
+    const matched = allTopics.filter(t=>c.toLowerCase().includes(t.name.toLowerCase())).map(t=>t.name);
     if(matched.length>=2){
       const [a,b]=[matched[0],matched[1]];
       if(!edges.find(e=>(e.from===a&&e.to===b)||(e.from===b&&e.to===a)))
@@ -291,6 +325,8 @@ function buildGraph(session){
   });
 
   applyClickSizes();
+  // Only simulate if no saved positions exist yet
+  simSteps = Object.keys(savedPos).length > 0 ? 0 : 220;
   document.getElementById('sn').textContent = nodes.length+' nodes';
   document.getElementById('se').textContent = edges.length+' edges';
 }
@@ -710,7 +746,11 @@ function openPanel(n){
     const s=sec('Sources & Research');
     n.sources.forEach(src=>{
       const c=document.createElement('div'); c.className='srcrd';
-      c.innerHTML=`<div class="stbdg">${src.type}</div><div class="stitle">${src.title}</div><div class="sdesc">${src.description}</div>`;
+      // Make title a clickable search link if no URL provided
+      const searchUrl=src.url||`https://www.google.com/search?q=${encodeURIComponent(src.title)}`;
+      c.innerHTML=`<div class="stbdg">${src.type}</div>
+        <a class="stitle-link" href="${searchUrl}" target="_blank" rel="noopener">${src.title} ↗</a>
+        <div class="sdesc">${src.description}</div>`;
       s.appendChild(c);
     });
     body.appendChild(s);
@@ -732,10 +772,20 @@ function closePanel(){ document.getElementById('panel').classList.remove('open')
 // ══════════════════════════════════════════
 function zoomBy(f){ camZ=Math.max(0.15,Math.min(5,camZ*f)); }
 function resetView(){ camX=0;camY=0;camZ=1; }
-function shuffle(){
-  nodes.forEach(n=>{ if(n.type!=='center'){ n.x+=(Math.random()-.5)*120; n.y+=(Math.random()-.5)*120; } });
-  simSteps=200;
+
+// Save node positions so they persist across reloads
+function saveNodePositions(){
+  const pos={};
+  nodes.forEach(n=>{ pos[n.id]={x:n.x,y:n.y}; });
+  localStorage.setItem('ahNodePositions',JSON.stringify(pos));
 }
+
+function loadNodePositions(){
+  try{ return JSON.parse(localStorage.getItem('ahNodePositions')||'{}'); }catch(e){ return {}; }
+}
+
+// Auto-save positions every 3s while dragging settles
+setInterval(()=>{ if(nodes.length) saveNodePositions(); }, 3000);
 
 // ══════════════════════════════════════════
 // DEMO DATA
