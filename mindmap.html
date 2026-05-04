@@ -1,0 +1,789 @@
+// this is the mindmap
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic History — Mind Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #131313;
+    --surface2: #1a1a1a;
+    --border: #222;
+    --border2: #2e2e2e;
+    --text: #e8e4dc;
+    --text-muted: #6b6760;
+    --text-dim: #333;
+    --accent: #c8a96e;
+    --accent-dim: #7a5f35;
+    --accent-glow: rgba(200,169,110,0.15);
+    --green: #4a7c59;
+    --green-bright: #6db88a;
+    --sidebar-w: 340px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* grain */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.35;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    z-index: 100;
+    background: var(--bg);
+  }
+
+  .logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 18px;
+    color: var(--accent);
+  }
+  .logo span { color: var(--text-muted); font-style: italic; font-size: 12px; margin-left: 8px; }
+
+  .header-right { display: flex; align-items: center; gap: 16px; }
+
+  .session-pill {
+    padding: 5px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .session-pill:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .session-pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
+  .open-recorder {
+    padding: 6px 14px;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.15s;
+  }
+  .open-recorder:hover { background: #d4b97e; }
+
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas {
+    position: absolute;
+    inset: 0;
+    cursor: grab;
+  }
+  canvas:active { cursor: grabbing; }
+
+  /* Sidebar */
+  .sidebar {
+    position: absolute;
+    top: 0; right: 0;
+    width: var(--sidebar-w);
+    height: 100%;
+    background: var(--surface);
+    border-left: 1px solid var(--border2);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    overflow-y: auto;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  .sidebar-header {
+    padding: 20px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 2;
+  }
+
+  .sidebar-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none; border: none;
+    color: var(--text-muted); font-size: 18px;
+    cursor: pointer; line-height: 1;
+    transition: color 0.15s;
+  }
+  .sidebar-close:hover { color: var(--text); }
+
+  .sidebar-topic {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 4px;
+    padding-right: 28px;
+  }
+
+  .sidebar-freq {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .sidebar-body { padding: 16px 20px; flex: 1; }
+
+  .sb-section {
+    margin-bottom: 24px;
+  }
+
+  .sb-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sb-summary {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.8;
+  }
+
+  .sb-connections { list-style: none; }
+  .sb-connections li {
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .sb-connections li:hover { color: var(--accent); }
+  .sb-connections li:last-child { border-bottom: none; }
+  .sb-connections li::before { content: '→ '; color: var(--accent-dim); }
+
+  .source-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .source-type {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent-dim);
+    margin-bottom: 4px;
+  }
+  .source-title { font-size: 12px; color: var(--text); margin-bottom: 4px; font-weight: 500; }
+  .source-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+  .sessions-panel {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+  .sessions-title {
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 10px;
+  }
+  .session-item {
+    padding: 7px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .session-item:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .session-item.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+  .session-date { font-size: 10px; opacity: 0.6; }
+
+  /* Empty state */
+  .empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 40px;
+  }
+  .empty-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .empty-hint { font-size: 12px; line-height: 1.8; color: var(--text-dim); }
+
+  /* zoom controls */
+  .zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;
+  }
+  .zoom-btn {
+    width: 32px; height: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .zoom-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+  .hint {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Agentic History <span>mind map</span></div>
+  <div class="header-right">
+    <div id="session-pills" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    <button class="open-recorder" onclick="window.open('history-ai.html')">+ New Session</button>
+  </div>
+</header>
+
+<div class="canvas-wrap">
+  <canvas id="canvas"></canvas>
+
+  <div class="empty-state" id="empty-state">
+    <div class="empty-title">No sessions yet</div>
+    <div class="empty-hint">Run a class recording through the pipeline<br>and your mind map will appear here automatically.</div>
+    <button class="open-recorder" onclick="window.open('history-ai.html')" style="margin-top:8px">Open Recorder →</button>
+  </div>
+
+  <div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+    <button class="zoom-btn" onclick="zoom(0.8)">−</button>
+    <button class="zoom-btn" onclick="resetView()" style="font-size:11px">⊙</button>
+  </div>
+
+  <div class="hint">drag to pan · scroll to zoom · click a node</div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <button class="sidebar-close" onclick="closeSidebar()">×</button>
+    <div class="sidebar-topic" id="sb-topic">Topic</div>
+    <div class="sidebar-freq" id="sb-freq"></div>
+  </div>
+  <div class="sidebar-body">
+    <div class="sb-section">
+      <div class="sb-label">Summary</div>
+      <div class="sb-summary" id="sb-summary"></div>
+    </div>
+    <div class="sb-section" id="sb-connections-section">
+      <div class="sb-label">Connections</div>
+      <ul class="sb-connections" id="sb-connections"></ul>
+    </div>
+    <div class="sb-section" id="sb-sources-section">
+      <div class="sb-label">Sources & Research</div>
+      <div id="sb-sources"></div>
+    </div>
+  </div>
+  <div class="sessions-panel">
+    <div class="sessions-title">Sessions</div>
+    <div id="sessions-list"></div>
+  </div>
+</div>
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────────────
+let sessions = [];
+let activeSessionIdx = 0;
+let nodes = [];
+let edges = [];
+let selectedNode = null;
+
+// ─── Canvas state ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+let offsetX = 0, offsetY = 0;
+let scale = 1;
+let dragging = false;
+let dragStart = { x: 0, y: 0 };
+let hoveredNode = null;
+
+// ─── Load data ───────────────────────────────────────────────────────────────
+function loadSessions() {
+  const raw = localStorage.getItem('agenticHistorySessions');
+  if (raw) {
+    try { sessions = JSON.parse(raw); } catch(e) { sessions = []; }
+  }
+
+  // DEMO DATA if empty — remove once real sessions exist
+  if (sessions.length === 0) {
+    sessions = [
+      {
+        date: new Date().toISOString().split('T')[0],
+        className: 'AP History',
+        topics: [
+          { name: 'US-China Relations', frequency: 'high', summary: 'Discussion of tariffs and trade war escalation between the US and China, and implications for global supply chains.' },
+          { name: 'AI Regulation', frequency: 'high', summary: 'Debate over how governments should regulate artificial intelligence, referencing EU AI Act and US executive orders.' },
+          { name: 'Climate Policy', frequency: 'medium', summary: 'Paris Agreement commitments and whether nations are on track to meet 2030 targets.' },
+          { name: 'NATO Expansion', frequency: 'medium', summary: 'Discussion of recent NATO membership changes and implications for European security.' },
+          { name: 'Middle East Conflict', frequency: 'low', summary: 'Ongoing humanitarian situation and ceasefire negotiations.' },
+          { name: 'Global Inflation', frequency: 'low', summary: 'Central bank responses to inflation across major economies.' },
+        ],
+        connections: [
+          'US-China Relations connects to Global Inflation because tariffs directly increase consumer prices worldwide.',
+          'AI Regulation connects to US-China Relations because AI dominance is a key axis of geopolitical competition.',
+          'Climate Policy connects to US-China Relations because both nations are the largest carbon emitters and must cooperate.',
+          'NATO Expansion connects to Middle East Conflict because shifting US attention affects Middle East security commitments.',
+        ],
+        sources: [
+          { topic: 'US-China Relations', title: 'The Hundred-Year Marathon', type: 'Book', description: 'Michael Pillsbury\'s analysis of China\'s long-term strategic goals.' },
+          { topic: 'AI Regulation', title: 'The Alignment Problem', type: 'Book', description: 'Brian Christian on how AI systems learn and why alignment matters for policy.' },
+          { topic: 'Climate Policy', title: 'IPCC Sixth Assessment Report', type: 'Website', description: 'The definitive scientific consensus on climate change and mitigation pathways.' },
+          { topic: 'NATO Expansion', title: 'NATO official website', type: 'Website', description: 'Primary source for understanding membership criteria and current members.' },
+        ]
+      }
+    ];
+  }
+
+  buildSessionPills();
+  buildSessionsList();
+  loadSession(0);
+}
+
+function buildSessionPills() {
+  const el = document.getElementById('session-pills');
+  el.innerHTML = '';
+  sessions.forEach((s, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'session-pill' + (i === activeSessionIdx ? ' active' : '');
+    pill.textContent = s.date;
+    pill.onclick = () => loadSession(i);
+    el.appendChild(pill);
+  });
+}
+
+function buildSessionsList() {
+  const el = document.getElementById('sessions-list');
+  el.innerHTML = '';
+  sessions.forEach((s, i) => {
+    const item = document.createElement('div');
+    item.className = 'session-item' + (i === activeSessionIdx ? ' active' : '');
+    item.innerHTML = `<span>${s.className}</span><span class="session-date">${s.date}</span>`;
+    item.onclick = () => { loadSession(i); };
+    el.appendChild(item);
+  });
+}
+
+function loadSession(idx) {
+  activeSessionIdx = idx;
+  const session = sessions[idx];
+  document.getElementById('empty-state').style.display = session ? 'none' : 'flex';
+  if (!session) return;
+
+  buildGraph(session);
+  buildSessionPills();
+  buildSessionsList();
+  closeSidebar();
+  resetView();
+  draw();
+}
+
+// ─── Graph layout ────────────────────────────────────────────────────────────
+function buildGraph(session) {
+  nodes = [];
+  edges = [];
+
+  // Centre node
+  nodes.push({
+    id: 'center',
+    label: session.className,
+    x: 0, y: 0,
+    r: 52,
+    type: 'center',
+    topic: null
+  });
+
+  const topics = session.topics || [];
+  const count = topics.length;
+
+  // Arrange topics in a circle, sized by frequency
+  topics.forEach((t, i) => {
+    const angle = (2 * Math.PI * i / count) - Math.PI / 2;
+    const dist = 220;
+    const r = t.frequency === 'high' ? 38 : t.frequency === 'medium' ? 30 : 22;
+    const x = Math.cos(angle) * dist;
+    const y = Math.sin(angle) * dist;
+    nodes.push({ id: t.name, label: t.name, x, y, r, type: 'topic', topic: t });
+    edges.push({ from: 'center', to: t.name, strength: 0.4 });
+  });
+
+  // Connection edges between topics
+  const conns = session.connections || [];
+  conns.forEach(c => {
+    const topicNames = topics.map(t => t.name);
+    let found = [];
+    topicNames.forEach(name => { if (c.includes(name)) found.push(name); });
+    if (found.length >= 2) {
+      edges.push({ from: found[0], to: found[1], strength: 0.8, label: '', connection: c });
+    }
+  });
+}
+
+// ─── Drawing ─────────────────────────────────────────────────────────────────
+function resize() {
+  W = canvas.width = canvas.offsetWidth;
+  H = canvas.height = canvas.offsetHeight;
+  draw();
+}
+
+function worldToScreen(x, y) {
+  return { x: x * scale + W/2 + offsetX, y: y * scale + H/2 + offsetY };
+}
+
+function screenToWorld(x, y) {
+  return { x: (x - W/2 - offsetX) / scale, y: (y - H/2 - offsetY) / scale };
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  if (nodes.length === 0) return;
+
+  // Draw edges
+  edges.forEach(e => {
+    const fromNode = nodes.find(n => n.id === e.from);
+    const toNode   = nodes.find(n => n.id === e.to);
+    if (!fromNode || !toNode) return;
+
+    const fs = worldToScreen(fromNode.x, fromNode.y);
+    const ts = worldToScreen(toNode.x, toNode.y);
+
+    const isConnection = e.connection;
+    ctx.beginPath();
+    ctx.moveTo(fs.x, fs.y);
+    ctx.lineTo(ts.x, ts.y);
+    ctx.strokeStyle = isConnection ? 'rgba(200,169,110,0.25)' : 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = isConnection ? 1.5 : 0.5;
+    if (isConnection) ctx.setLineDash([4, 6]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    const s = worldToScreen(n.x, n.y);
+    const r = n.r * scale;
+    const isHovered = hoveredNode && hoveredNode.id === n.id;
+    const isSelected = selectedNode && selectedNode.id === n.id;
+
+    // Glow for selected/hovered
+    if (isSelected || isHovered) {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r + 10, 0, Math.PI * 2);
+      const grd = ctx.createRadialGradient(s.x, s.y, r, s.x, s.y, r + 14);
+      grd.addColorStop(0, 'rgba(200,169,110,0.18)');
+      grd.addColorStop(1, 'rgba(200,169,110,0)');
+      ctx.fillStyle = grd;
+      ctx.fill();
+    }
+
+    // Node circle
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+
+    if (n.type === 'center') {
+      ctx.fillStyle = '#1a1510';
+      ctx.fill();
+      ctx.strokeStyle = isSelected ? '#c8a96e' : '#6a5030';
+      ctx.lineWidth = isSelected ? 2 : 1;
+      ctx.stroke();
+    } else {
+      const freq = n.topic.frequency;
+      const fills = { high: '#1a1510', medium: '#111410', low: '#0f0f12' };
+      const strokes = { high: '#7a5f35', medium: '#4a5030', low: '#303040' };
+      ctx.fillStyle = fills[freq] || '#111';
+      ctx.fill();
+      ctx.strokeStyle = isSelected ? '#c8a96e' : (strokes[freq] || '#333');
+      ctx.lineWidth = isSelected ? 2 : 0.8;
+      ctx.stroke();
+    }
+
+    // Label
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (n.type === 'center') {
+      ctx.font = `italic ${Math.max(10, 13 * scale)}px 'Instrument Serif', serif`;
+      ctx.fillStyle = '#c8a96e';
+      ctx.fillText(n.label, s.x, s.y);
+    } else {
+      const fontSize = Math.max(8, 10 * scale);
+      ctx.font = `${fontSize}px 'DM Mono', monospace`;
+      ctx.fillStyle = isSelected || isHovered ? '#e8e4dc' : '#8a8680';
+
+      // Word wrap for longer labels
+      const words = n.label.split(' ');
+      if (words.length === 1 || r > 30) {
+        if (words.length <= 2) {
+          ctx.fillText(n.label, s.x, s.y);
+        } else {
+          const mid = Math.ceil(words.length / 2);
+          ctx.fillText(words.slice(0, mid).join(' '), s.x, s.y - fontSize * 0.7);
+          ctx.fillText(words.slice(mid).join(' '), s.x, s.y + fontSize * 0.7);
+        }
+      } else {
+        ctx.fillText(words[0], s.x, s.y - fontSize * 0.6);
+        ctx.fillText(words.slice(1).join(' '), s.x, s.y + fontSize * 0.6);
+      }
+    }
+  });
+}
+
+// ─── Interaction ─────────────────────────────────────────────────────────────
+function getNodeAt(sx, sy) {
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const n = nodes[i];
+    const s = worldToScreen(n.x, n.y);
+    const dist = Math.hypot(sx - s.x, sy - s.y);
+    if (dist < n.r * scale + 8) return n;
+  }
+  return null;
+}
+
+canvas.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const hit = getNodeAt(mx, my);
+  if (hit) {
+    if (hit.type !== 'center') openSidebar(hit);
+  } else {
+    dragging = true;
+    dragStart = { x: e.clientX - offsetX, y: e.clientY - offsetY };
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  if (dragging) {
+    offsetX = e.clientX - dragStart.x;
+    offsetY = e.clientY - dragStart.y;
+    draw();
+    return;
+  }
+
+  const hit = getNodeAt(mx, my);
+  if (hit !== hoveredNode) {
+    hoveredNode = hit;
+    canvas.style.cursor = hit ? 'pointer' : 'grab';
+    draw();
+  }
+});
+
+canvas.addEventListener('mouseup', () => { dragging = false; });
+canvas.addEventListener('mouseleave', () => { dragging = false; });
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.92 : 1.08;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  // Zoom towards cursor
+  offsetX = mx - (mx - offsetX) * factor - W/2 * (factor - 1);
+  offsetY = my - (my - offsetY) * factor - H/2 * (factor - 1);
+  scale *= factor;
+  scale = Math.max(0.3, Math.min(3, scale));
+  draw();
+}, { passive: false });
+
+// Touch support
+let lastTouchDist = 0;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    dragging = true;
+    dragStart = { x: t.clientX - offsetX, y: t.clientY - offsetY };
+  } else if (e.touches.length === 2) {
+    lastTouchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && dragging) {
+    offsetX = e.touches[0].clientX - dragStart.x;
+    offsetY = e.touches[0].clientY - dragStart.y;
+    draw();
+  } else if (e.touches.length === 2) {
+    const dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    const factor = dist / lastTouchDist;
+    scale *= factor;
+    scale = Math.max(0.3, Math.min(3, scale));
+    lastTouchDist = dist;
+    draw();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => { dragging = false; });
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+function openSidebar(node) {
+  selectedNode = node;
+  const t = node.topic;
+  const session = sessions[activeSessionIdx];
+
+  document.getElementById('sb-topic').textContent = t.name;
+  document.getElementById('sb-freq').textContent = t.frequency + ' discussion frequency';
+  document.getElementById('sb-summary').textContent = t.summary;
+
+  // Connections mentioning this topic
+  const conns = (session.connections || []).filter(c => c.includes(t.name));
+  const connEl = document.getElementById('sb-connections');
+  connEl.innerHTML = '';
+  if (conns.length) {
+    conns.forEach(c => {
+      const li = document.createElement('li');
+      li.textContent = c;
+      connEl.appendChild(li);
+    });
+    document.getElementById('sb-connections-section').style.display = 'block';
+  } else {
+    document.getElementById('sb-connections-section').style.display = 'none';
+  }
+
+  // Sources for this topic
+  const srcs = (session.sources || []).filter(s => s.topic === t.name);
+  const srcEl = document.getElementById('sb-sources');
+  srcEl.innerHTML = '';
+  if (srcs.length) {
+    srcs.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'source-card';
+      card.innerHTML = `<div class="source-type">${s.type}</div><div class="source-title">${s.title}</div><div class="source-desc">${s.description}</div>`;
+      srcEl.appendChild(card);
+    });
+    document.getElementById('sb-sources-section').style.display = 'block';
+  } else {
+    document.getElementById('sb-sources-section').style.display = 'none';
+  }
+
+  document.getElementById('sidebar').classList.add('open');
+  draw();
+}
+
+function closeSidebar() {
+  selectedNode = null;
+  document.getElementById('sidebar').classList.remove('open');
+  draw();
+}
+
+// ─── Controls ────────────────────────────────────────────────────────────────
+function zoom(factor) {
+  scale *= factor;
+  scale = Math.max(0.3, Math.min(3, scale));
+  draw();
+}
+
+function resetView() {
+  scale = 1;
+  offsetX = 0;
+  offsetY = 0;
+  draw();
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', resize);
+resize();
+loadSessions();
+
+// Poll for new sessions every 3 seconds (so opening recorder and running pipeline auto-updates)
+setInterval(() => {
+  const raw = localStorage.getItem('agenticHistorySessions');
+  if (raw) {
+    try {
+      const fresh = JSON.parse(raw);
+      if (fresh.length !== sessions.length) {
+        sessions = fresh;
+        buildSessionPills();
+        buildSessionsList();
+        loadSession(activeSessionIdx < fresh.length ? activeSessionIdx : 0);
+      }
+    } catch(e) {}
+  }
+}, 3000);
+</script>
+</body>
+</html>
