@@ -461,22 +461,38 @@ function drawEdge(a,b,e){
   const as=w2s(a.x,a.y), bs=w2s(b.x,b.y);
   ctx.beginPath();
   if(e.kind==='conn'){
+    // Cross-connection: bright curved teal line with label
     const mx=(as.x+bs.x)/2, my=(as.y+bs.y)/2;
-    const px=-(bs.y-as.y)*0.14, py=(bs.x-as.x)*0.14;
+    const px=-(bs.y-as.y)*0.18, py=(bs.x-as.x)*0.18;
     ctx.moveTo(as.x,as.y);
     ctx.quadraticCurveTo(mx+px,my+py,bs.x,bs.y);
-    ctx.strokeStyle='rgba(78,205,196,0.2)'; ctx.lineWidth=1;
-    ctx.setLineDash([4,7]);
+    ctx.strokeStyle='rgba(78,205,196,0.65)'; ctx.lineWidth=1.5;
+    ctx.setLineDash([6,5]);
+    ctx.stroke(); ctx.setLineDash([]);
+    // Draw label at midpoint
+    if(e.label && camZ > 0.5){
+      const lx=mx+px*0.5, ly=my+py*0.5;
+      const words=e.label.replace(/ connects to .* because /i,' → ').substring(0,48);
+      ctx.font=`500 ${Math.max(9,10*camZ)}px 'Syne',sans-serif`;
+      const tw=ctx.measureText(words).width;
+      ctx.fillStyle='rgba(13,13,15,0.75)';
+      ctx.beginPath();
+      ctx.roundRect(lx-tw/2-5,ly-8,tw+10,16,3);
+      ctx.fill();
+      ctx.fillStyle='rgba(78,205,196,0.9)';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(words,lx,ly);
+    }
   } else if(e.kind==='child'){
     ctx.moveTo(as.x,as.y); ctx.lineTo(bs.x,bs.y);
-    ctx.strokeStyle='rgba(123,104,238,0.22)'; ctx.lineWidth=0.8;
-    ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(123,104,238,0.45)'; ctx.lineWidth=1.2;
+    ctx.setLineDash([]); ctx.stroke();
   } else {
+    // Spoke from center
     ctx.moveTo(as.x,as.y); ctx.lineTo(bs.x,bs.y);
-    ctx.strokeStyle='rgba(201,168,76,0.1)'; ctx.lineWidth=0.6;
-    ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(201,168,76,0.22)'; ctx.lineWidth=0.8;
+    ctx.setLineDash([]); ctx.stroke();
   }
-  ctx.stroke(); ctx.setLineDash([]);
 }
 
 function drawNode(n){
