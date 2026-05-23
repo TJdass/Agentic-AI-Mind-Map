@@ -6,12 +6,12 @@
 <title>Agentic History — Recorder</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#0e0e0e; --surface:#161616; --border:#2a2a2a; --border-light:#333;
-    --text:#e8e4dc; --text-muted:#6b6760; --text-dim:#3d3b38;
-    --accent:#c8a96e; --accent-dim:#8a6f3f;
-    --green:#4a7c59; --green-bright:#6db88a;
-    --red:#7c4a4a; --red-bright:#c47a7a; --recording:#c0392b;
+  :root{
+    --bg:#0e0e0e;--surface:#161616;--border:#2a2a2a;--border-light:#333;
+    --text:#e8e4dc;--text-muted:#6b6760;--text-dim:#3d3b38;
+    --accent:#c8a96e;--accent-dim:#8a6f3f;
+    --green:#4a7c59;--green-bright:#6db88a;
+    --red:#7c4a4a;--red-bright:#c47a7a;--recording:#c0392b;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;min-height:100vh;overflow-x:hidden}
@@ -39,6 +39,9 @@
   .key-field label{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
   .key-field input{background:none;border:none;outline:none;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;width:100%}
   .key-field input::placeholder{color:var(--text-dim)}
+  .key-hint{font-size:10px;color:var(--text-muted);margin-top:6px;line-height:1.5}
+  .key-hint a{color:var(--accent);text-decoration:none}
+  .key-hint a:hover{text-decoration:underline}
   .audio-area{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
   .upload-zone{border:1px dashed var(--border-light);border-radius:8px;padding:36px 32px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;background:var(--surface)}
   .upload-zone:hover,.upload-zone.dragover{border-color:var(--accent-dim);background:#1a1814}
@@ -46,7 +49,7 @@
   .upload-icon{font-size:28px;margin-bottom:10px;opacity:0.4}
   .upload-title{font-family:'Instrument Serif',serif;font-size:18px;color:var(--text);margin-bottom:4px}
   .upload-hint{color:var(--text-muted);font-size:11px}
-  .file-selected{margin-top:10px;padding:8px 14px;background:#1a1a14;border:1px solid var(--accent-dim);border-radius:4px;color:var(--accent);font-size:11px;display:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .file-selected{margin-top:10px;padding:8px 14px;background:#1a1a14;border:1px solid var(--accent-dim);border-radius:4px;color:var(--accent);font-size:11px;display:none;align-items:center;justify-content:space-between;gap:8px}
   .file-selected-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .delete-btn{background:none;border:none;color:var(--text-muted);font-size:15px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;transition:color 0.15s}
   .delete-btn:hover{color:var(--red-bright)}
@@ -61,8 +64,8 @@
   .record-label{font-size:11px;color:var(--text-muted);letter-spacing:0.5px;text-align:center}
   .record-timer{font-size:18px;color:var(--red-bright);font-family:'DM Mono',monospace;display:none;letter-spacing:2px}
   .record-timer.visible{display:block}
-  .record-ready{font-size:10px;color:var(--green-bright);text-align:center;display:none;line-height:1.5}
-  .record-ready.show{display:block}
+  .record-ready{font-size:10px;color:var(--green-bright);text-align:center;display:none;line-height:1.5;align-items:center;gap:6px}
+  .record-ready.show{display:flex}
   .waveform{display:flex;align-items:center;gap:2px;height:20px;opacity:0;transition:opacity 0.3s}
   .waveform.active{opacity:1}
   .wave-bar{width:3px;background:var(--red-bright);border-radius:2px;height:4px;transition:height 0.1s}
@@ -120,16 +123,16 @@
   <div class="logo">Agentic History <span>recorder</span></div>
   <div class="header-right">
     <div>
-      <span class="status-dot" id="gemini-dot"></span>
-      <span class="status-label" id="gemini-status">gemini not configured</span>
+      <span class="status-dot" id="claude-dot"></span>
+      <span class="status-label" id="claude-status">claude not configured</span>
     </div>
-    <button class="open-map" onclick="window.open('mindmap.html')">Open Mind Map ↗</button>
+    <button class="open-map" onclick="openSibling('mindmap.html')">Open Mind Map ↗</button>
   </div>
 </header>
 
 <main>
   <h1 class="page-title">Current Events<br><em>Intelligence System</em></h1>
-  <p class="page-subtitle">// record or upload audio → transcribe → analyze → mind map</p>
+  <p class="page-subtitle">// record → transcribe → analyze with Claude → mind map</p>
 
   <!-- Config -->
   <div class="section">
@@ -139,8 +142,9 @@
     </div>
     <div class="field-row">
       <div class="key-field">
-        <label>Gemini API Key</label>
-        <input type="password" id="gemini-key" placeholder="AIza..." oninput="saveKeys()">
+        <label>Anthropic API Key</label>
+        <input type="password" id="claude-key" placeholder="sk-ant-..." oninput="saveKeys()">
+        <div class="key-hint">Get a free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
       </div>
       <div class="key-field">
         <label>Class Name</label>
@@ -174,7 +178,7 @@
         </button>
         <div class="record-timer" id="record-timer">0:00</div>
         <div class="record-label" id="record-label">Click to record</div>
-        <div class="record-ready" id="record-ready" style="display:flex;align-items:center;gap:6px;display:none">
+        <div class="record-ready" id="record-ready">
           <span id="record-ready-text"></span>
           <button class="delete-btn" onclick="clearAudio()" title="Discard recording">×</button>
         </div>
@@ -212,16 +216,22 @@
   <div class="success-banner" id="success-banner"></div>
 </main>
 
-<footer>Agentic History &nbsp;·&nbsp; Built for Thacher School &nbsp;·&nbsp; Powered by Gemini</footer>
+<footer>Agentic History &nbsp;·&nbsp; Built for Thacher School &nbsp;·&nbsp; Powered by Claude</footer>
 
 <script>
   let transcript='', analysisData=null, audioBlob=null;
   let mediaRecorder=null, recordingChunks=[], timerInterval=null, timerSeconds=0;
   let analyserNode=null, animFrame=null;
+  let liveTranscript='';
+
+  function openSibling(filename){
+    const base=window.location.href.substring(0,window.location.href.lastIndexOf('/')+1);
+    window.open(base+filename);
+  }
 
   window.addEventListener('load',()=>{
     const s=JSON.parse(localStorage.getItem('agenticHistoryConfig')||'{}');
-    if(s.geminiKey) document.getElementById('gemini-key').value=s.geminiKey;
+    if(s.claudeKey) document.getElementById('claude-key').value=s.claudeKey;
     if(s.className) document.getElementById('class-name').value=s.className;
     updateStatus();
   });
@@ -231,7 +241,7 @@
     clearTimeout(saveTimeout);
     saveTimeout=setTimeout(()=>{
       localStorage.setItem('agenticHistoryConfig',JSON.stringify({
-        geminiKey:document.getElementById('gemini-key').value.trim(),
+        claudeKey:document.getElementById('claude-key').value.trim(),
         className:document.getElementById('class-name').value.trim(),
       }));
       const b=document.getElementById('saved-badge');
@@ -241,23 +251,23 @@
   }
 
   function updateStatus(){
-    const g=document.getElementById('gemini-key').value.trim();
-    document.getElementById('gemini-dot').className='status-dot'+(g?' active':'');
-    document.getElementById('gemini-status').textContent=g?'gemini configured':'gemini not configured';
+    const k=document.getElementById('claude-key').value.trim();
+    document.getElementById('claude-dot').className='status-dot'+(k?' active':'');
+    document.getElementById('claude-status').textContent=k?'claude configured':'claude not configured';
     checkRunnable();
   }
 
   function checkRunnable(){
-    const g=document.getElementById('gemini-key').value.trim();
-    const has=audioBlob||document.getElementById('audio-file').files[0];
-    document.getElementById('run-btn').disabled=!(g&&has);
+    const k=document.getElementById('claude-key').value.trim();
+    const has=audioBlob||document.getElementById('audio-file').files[0]||liveTranscript;
+    document.getElementById('run-btn').disabled=!(k&&has);
   }
 
   function onFileSelect(input){
     const f=input.files[0]; if(!f) return;
-    audioBlob=null;
+    audioBlob=null; liveTranscript='';
     showFileSelected('✓ '+f.name+' ('+(f.size/1024/1024).toFixed(1)+' MB)');
-    const rr=document.getElementById('record-ready'); rr.style.display='none';
+    document.getElementById('record-ready').classList.remove('show');
     checkRunnable();
   }
 
@@ -267,18 +277,12 @@
   }
 
   function clearAudio(){
-    audioBlob=null;
-    // Reset file input
-    const fi=document.getElementById('audio-file');
-    fi.value='';
-    // Hide file-selected banner
+    audioBlob=null; liveTranscript='';
+    document.getElementById('audio-file').value='';
     document.getElementById('file-selected').style.display='none';
     document.getElementById('file-selected-name').textContent='';
-    // Hide record-ready
-    const rr=document.getElementById('record-ready');
-    rr.style.display='none';
+    document.getElementById('record-ready').classList.remove('show');
     document.getElementById('record-ready-text').textContent='';
-    // Stop recording if still active
     if(mediaRecorder&&mediaRecorder.state==='recording') stopRecording();
     checkRunnable();
   }
@@ -290,10 +294,13 @@
     e.preventDefault();zone.classList.remove('dragover');
     const f=e.dataTransfer.files[0]; if(!f) return;
     document.getElementById('audio-file').files=e.dataTransfer.files;
-    audioBlob=null;
+    audioBlob=null; liveTranscript='';
     showFileSelected('✓ '+f.name+' ('+(f.size/1024/1024).toFixed(1)+' MB)');
     checkRunnable();
   });
+
+  // ── RECORDING with live speech-to-text ──────────────────────────
+  let recognition=null;
 
   async function toggleRecord(){
     if(mediaRecorder&&mediaRecorder.state==='recording') stopRecording();
@@ -303,27 +310,51 @@
   async function startRecording(){
     try{
       const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+
+      // Waveform
       const audioCtx=new AudioContext();
       const source=audioCtx.createMediaStreamSource(stream);
       analyserNode=audioCtx.createAnalyser(); analyserNode.fftSize=32;
       source.connect(analyserNode); animateWaveform();
-      recordingChunks=[];
+
+      // MediaRecorder for blob
+      recordingChunks=[]; liveTranscript='';
       mediaRecorder=new MediaRecorder(stream);
       mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recordingChunks.push(e.data)};
       mediaRecorder.onstop=()=>{
         audioBlob=new Blob(recordingChunks,{type:'audio/webm'});
-        stream.getTracks().forEach(t=>t.stop()); audioCtx.close();
+        stream.getTracks().forEach(t=>t.stop());
+        audioCtx.close();
         cancelAnimationFrame(animFrame);
         document.getElementById('waveform').classList.remove('active');
         resetWaveBars();
         const m=Math.floor(timerSeconds/60),s=timerSeconds%60;
         showFileSelected('✓ Recording: '+m+':'+s.toString().padStart(2,'0'));
-        const rr=document.getElementById('record-ready');
         document.getElementById('record-ready-text').textContent='Ready — hit Run Pipeline or × to discard';
-        rr.style.display='flex';
+        document.getElementById('record-ready').classList.add('show');
+        if(recognition) recognition.stop();
         checkRunnable();
       };
       mediaRecorder.start();
+
+      // Live speech-to-text (Chrome built-in, free)
+      if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){
+        const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+        recognition=new SR();
+        recognition.continuous=true;
+        recognition.interimResults=true;
+        recognition.lang='en-US';
+        recognition.onresult=e=>{
+          let final='';
+          for(let i=e.resultIndex;i<e.results.length;i++){
+            if(e.results[i].isFinal) final+=e.results[i][0].transcript+' ';
+          }
+          if(final) liveTranscript+=final;
+        };
+        recognition.onerror=()=>{};
+        recognition.start();
+      }
+
       timerSeconds=0;
       timerInterval=setInterval(()=>{
         timerSeconds++;
@@ -334,7 +365,7 @@
       document.getElementById('record-timer').classList.add('visible');
       document.getElementById('record-label').textContent='Click to stop';
       document.getElementById('waveform').classList.add('active');
-    } catch(e){ alert('Microphone access denied.'); }
+    } catch(e){ alert('Microphone access denied. Please allow microphone access in your browser settings.'); }
   }
 
   function stopRecording(){
@@ -354,7 +385,7 @@
     });
     animFrame=requestAnimationFrame(animateWaveform);
   }
-  function resetWaveBars(){ document.querySelectorAll('.wave-bar').forEach(b=>b.style.height='4px'); }
+  function resetWaveBars(){document.querySelectorAll('.wave-bar').forEach(b=>b.style.height='4px');}
 
   function setStep(n,state,detail){
     document.getElementById('step-'+n).className='step '+state;
@@ -369,28 +400,101 @@
     document.getElementById('tab-'+name).classList.add('active');
   }
 
-  async function getAudioBase64(){
-    const blob=audioBlob||document.getElementById('audio-file').files[0];
-    if(!blob) throw new Error('No audio');
-    return new Promise((res,rej)=>{
-      const r=new FileReader();
-      r.onload=()=>res({base64:r.result.split(',')[1],mimeType:blob.type||'audio/webm'});
-      r.onerror=rej; r.readAsDataURL(blob);
-    });
-  }
-
-  async function gemini(prompt, key){
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.35}})
+  // ── CLAUDE API ───────────────────────────────────────────────────
+  async function claude(prompt, key){
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:2048,
+        messages:[{role:'user',content:prompt}]
+      })
     });
     const d=await r.json();
     if(d.error) throw new Error(d.error.message);
-    return d.candidates[0].content.parts[0].text.trim().replace(/```json|```/g,'').trim();
+    return d.content[0].text.trim().replace(/```json|```/g,'').trim();
   }
 
+  // Transcribe an uploaded file by decoding audio internally and
+  // running speech recognition on the media stream (no external speakers needed)
+  function transcribeViaPlayback(blob){
+    return new Promise((resolve, reject)=>{
+      if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+        reject(new Error('Speech recognition not supported in this browser. Please use Chrome and use the Record button to capture audio directly.'));
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio();
+      audio.src = url;
+
+      // Use captureStream() to pipe audio directly into SpeechRecognition
+      // without needing to play through speakers
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      let captured = '';
+      let finished = false;
+
+      function finish(result, err){
+        if(finished) return;
+        finished = true;
+        audio.pause();
+        URL.revokeObjectURL(url);
+        if(err) reject(err);
+        else if(result && result.trim().length > 5) resolve(result.trim());
+        else reject(new Error('No speech detected. Make sure your audio file contains clear speech, then try again using the Record button for best results.'));
+      }
+
+      // Try captureStream first (Chrome 74+) — routes internally, no speakers needed
+      if(typeof audio.captureStream === 'function'){
+        try{
+          const stream = audio.captureStream();
+          const rec = new SR();
+          rec.continuous = true;
+          rec.interimResults = false;
+          rec.lang = 'en-US';
+          rec.onresult = e=>{
+            for(let i=e.resultIndex;i<e.results.length;i++){
+              if(e.results[i].isFinal) captured += e.results[i][0].transcript + ' ';
+            }
+          };
+          rec.onerror = e=>{ if(e.error !== 'no-speech') finish(null, new Error('Recognition error: '+e.error)); };
+          rec.onend = ()=>finish(captured, null);
+          audio.onended = ()=>{ setTimeout(()=>rec.stop(), 500); };
+          audio.onerror = ()=>finish(null, new Error('Could not play audio file — try a different format.'));
+          rec.start();
+          setTimeout(()=>audio.play().catch(e=>finish(null, new Error('Playback failed: '+e.message))), 200);
+          return;
+        } catch(e){ /* fall through to speaker method */ }
+      }
+
+      // Fallback: play through speakers (user will hear audio)
+      const rec = new SR();
+      rec.continuous = true;
+      rec.interimResults = false;
+      rec.lang = 'en-US';
+      rec.onresult = e=>{
+        for(let i=e.resultIndex;i<e.results.length;i++){
+          if(e.results[i].isFinal) captured += e.results[i][0].transcript + ' ';
+        }
+      };
+      rec.onerror = e=>{ if(e.error !== 'no-speech') finish(null, new Error('Recognition error: '+e.error)); };
+      rec.onend = ()=>finish(captured, null);
+      audio.onended = ()=>{ setTimeout(()=>rec.stop(), 500); };
+      audio.onerror = ()=>finish(null, new Error('Could not play audio file.'));
+      rec.start();
+      setTimeout(()=>audio.play().catch(e=>finish(null, new Error('Playback failed: '+e.message))), 300);
+    });
+  }
+
+  // ── PIPELINE ─────────────────────────────────────────────────────
   async function runPipeline(){
-    const key=document.getElementById('gemini-key').value.trim();
+    const key=document.getElementById('claude-key').value.trim();
     const className=document.getElementById('class-name').value.trim()||'History Class';
 
     document.getElementById('pipeline').classList.add('visible');
@@ -398,32 +502,33 @@
     document.getElementById('success-banner').style.display='none';
     document.getElementById('run-btn').disabled=true;
 
-    // Step 1: Transcribe
-    setStep(1,'active','Reading audio...');
+    // Step 1: Transcription
+    setStep(1,'active','Transcribing...');
     try{
-      const {base64,mimeType}=await getAudioBase64();
-      setStep(1,'active','Sending to Gemini...');
-      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({contents:[{parts:[
-          {text:'Transcribe this audio recording of a history class discussion about current events. Output only the transcription, no commentary.'},
-          {inline_data:{mime_type:mimeType,data:base64}}
-        ]}]})
-      });
-      const d=await r.json();
-      if(d.error) throw new Error(d.error.message);
-      transcript=d.candidates[0].content.parts[0].text;
-      document.getElementById('transcript-box').textContent=transcript;
-      setStep(1,'done','Transcription complete — '+transcript.split(' ').length+' words');
+      if(liveTranscript && liveTranscript.trim().length > 20){
+        // Path A: use live speech recognition captured during recording
+        transcript=liveTranscript.trim();
+        document.getElementById('transcript-box').textContent=transcript;
+        setStep(1,'done','Live transcript captured — '+transcript.split(' ').length+' words');
+      } else {
+        // Path B: uploaded file — play audio through browser and capture via SpeechRecognition
+        const blob=audioBlob||document.getElementById('audio-file').files[0];
+        if(!blob) throw new Error('No audio source found');
+
+        setStep(1,'active','Playing audio through speech recognition...');
+        transcript = await transcribeViaPlayback(blob);
+        document.getElementById('transcript-box').textContent=transcript;
+        setStep(1,'done','Transcription complete — '+transcript.split(' ').length+' words');
+      }
     } catch(e){ setStep(1,'error','Error: '+e.message); document.getElementById('run-btn').disabled=false; return; }
 
     // Step 2: Topics
     setStep(2,'active','Identifying key topics...');
     try{
-      const raw=await gemini(`Analyze this history class transcript and extract the main topics discussed.
-Return ONLY valid JSON, no markdown.
+      const raw=await claude(`Analyze this history class transcript and extract the main topics discussed.
+Return ONLY valid JSON, no markdown, no explanation.
 Format: {"topics":[{"name":"Topic Name","frequency":"high/medium/low","summary":"1-2 sentence summary"}]}
-Rank by discussion time. Include 3-8 topics.
+Rank by how much time was spent on each. Include 3-8 topics.
 Transcript: ${transcript}`, key);
       analysisData=JSON.parse(raw);
       const el=document.getElementById('topics-chips'); el.innerHTML='';
@@ -437,10 +542,10 @@ Transcript: ${transcript}`, key);
     // Step 3: Connections
     setStep(3,'active','Mapping historical connections...');
     try{
-      const raw=await gemini(`Based on this history class discussion, identify meaningful historical connections between the topics.
-Return ONLY valid JSON, no markdown.
+      const raw=await claude(`Based on this history class discussion, identify meaningful historical connections between the topics discussed.
+Return ONLY valid JSON, no markdown, no explanation.
 Format: {"connections":["Topic A connects to Topic B because..."]}
-Include 3-6 connections.
+Include 3-6 connections. Think historically — cause and effect, parallel events, shared themes.
 Topics: ${analysisData.topics.map(t=>t.name).join(', ')}
 Transcript excerpt: ${transcript.substring(0,2000)}`, key);
       const p=JSON.parse(raw);
@@ -453,8 +558,8 @@ Transcript excerpt: ${transcript.substring(0,2000)}`, key);
     // Step 4: Sources
     setStep(4,'active','Researching sources...');
     try{
-      const raw=await gemini(`For each major topic from this history class, suggest 3-4 high-quality research sources mixing books, documentaries, articles, and websites for a high school student. Include a real URL where possible.
-Return ONLY valid JSON, no markdown.
+      const raw=await claude(`For each major topic from this history class, suggest 3-4 high-quality research sources (mix of books, documentaries, articles, websites) appropriate for a high school student. Include real URLs where possible.
+Return ONLY valid JSON, no markdown, no explanation.
 Format: {"sources":[{"topic":"Topic Name","title":"Source Title","type":"Book/Documentary/Article/Website","description":"1 sentence why useful","url":"https://... or empty string"}]}
 Generate at least 3 sources per topic.
 Topics: ${analysisData.topics.slice(0,5).map(t=>t.name).join(', ')}`, key);
@@ -463,27 +568,52 @@ Topics: ${analysisData.topics.slice(0,5).map(t=>t.name).join(', ')}`, key);
       const el=document.getElementById('sources-list'); el.innerHTML='';
       p.sources.forEach(s=>{
         const li=document.createElement('li');
-        const searchUrl=s.url||`https://www.google.com/search?q=${encodeURIComponent(s.title)}`;
+        const url=s.url||`https://www.google.com/search?q=${encodeURIComponent(s.title)}`;
         li.innerHTML=`<div class="source-topic">${s.topic} · ${s.type}</div>
-          <a class="source-link" href="${searchUrl}" target="_blank" rel="noopener">${s.title} ↗</a>
+          <a class="source-link" href="${url}" target="_blank" rel="noopener">${s.title} ↗</a>
           <div class="source-desc">${s.description}</div>`;
         el.appendChild(li);
       });
       setStep(4,'done',p.sources.length+' sources found');
     } catch(e){ setStep(4,'error','Error: '+e.message); document.getElementById('run-btn').disabled=false; return; }
 
-    // Step 5: Save to localStorage for mind map
+    // Step 5: Save — merges with any existing session from same day
     setStep(5,'active','Saving to mind map...');
     try{
       const dateStr=new Date().toISOString().split('T')[0];
-      const session={date:dateStr,className,topics:analysisData.topics,connections:analysisData.connections,sources:analysisData.sources,transcript};
       const existing=JSON.parse(localStorage.getItem('agenticHistorySessions')||'[]');
       const idx=existing.findIndex(s=>s.date===dateStr&&s.className===className);
-      if(idx>=0) existing[idx]=session; else existing.unshift(session);
+
+      if(idx>=0){
+        // Same day re-run: MERGE topics/connections/sources instead of replacing
+        const prev=existing[idx];
+        const mergedTopics=[...prev.topics];
+        analysisData.topics.forEach(t=>{
+          if(!mergedTopics.find(x=>x.name===t.name)) mergedTopics.push(t);
+          else {
+            // Upgrade frequency if new run shows higher
+            const ex=mergedTopics.find(x=>x.name===t.name);
+            if(t.frequency==='high') ex.frequency='high';
+          }
+        });
+        const mergedConns=[...prev.connections];
+        analysisData.connections.forEach(c=>{ if(!mergedConns.includes(c)) mergedConns.push(c); });
+        const mergedSrcs=[...prev.sources];
+        analysisData.sources.forEach(s=>{ if(!mergedSrcs.find(x=>x.title===s.title)) mergedSrcs.push(s); });
+        existing[idx]={date:dateStr,className,
+          topics:mergedTopics,connections:mergedConns,sources:mergedSrcs,
+          transcript:(prev.transcript?prev.transcript+'\n\n---\n\n':'')+transcript};
+      } else {
+        // New session — prepend
+        existing.unshift({date:dateStr,className,
+          topics:analysisData.topics,connections:analysisData.connections,
+          sources:analysisData.sources,transcript});
+      }
+
       localStorage.setItem('agenticHistorySessions',JSON.stringify(existing));
       setStep(5,'done','Session saved — open Mind Map to see it');
       const banner=document.getElementById('success-banner');
-      banner.innerHTML='✓ Session saved to mind map. <a href="mindmap.html" style="color:var(--green-bright);text-decoration:underline">Open Mind Map ↗</a>';
+      banner.innerHTML='✓ Session saved. <a href="#" onclick="openSibling(\'mindmap.html\')" style="color:var(--green-bright);text-decoration:underline">Open Mind Map ↗</a>';
       banner.style.display='block';
     } catch(e){ setStep(5,'error','Save failed: '+e.message); }
 
